@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "github.com/hoyle1974/grapevine/proto";
+
+message Error { 
+  string msg = 1;
+}
+
+message ClientAddress {
+  string ip_address = 1;
+  int32 port = 2;
+}
+
+message UserContact {
+  string user_id = 1;
+  ClientAddress client_address = 2;
+}

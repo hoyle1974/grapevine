@@ -1,0 +1,50 @@
+syntax = "proto3";
+import "proto/common.proto";
+
+package proto;
+option go_package = "github.com/hoyle1974/grapevine/proto";
+
+
+enum SocialListType {
+  FOLLOW = 0;
+  FRIEND = 1;
+  BLOCKED = 2;
+}
+
+message GetSocialListRequest {
+  string user_id = 1;
+  SocialListType list_type = 2;
+}
+
+message GetSocialListResponse {
+  Error error = 1;
+  repeated string ids = 2;
+}
+
+message AddToSocialListRequest {
+  string user_id = 1;
+  SocialListType social_list_type = 2;
+  string id_to_add = 3;
+}
+
+message AddToSocialListResponse {
+  Error error = 1;
+  string message = 2;
+}
+
+message RemoveFromSocialListRequest {
+  string user_id = 1;
+  SocialListType social_list_type = 2;
+  string id_to_remove = 3;
+}
+
+message RemoveFromSocialListResponse {
+  Error error = 1;
+  string message = 2;
+}
+
+service SocialListService {
+  rpc GetSocialList (GetSocialListRequest) returns (GetSocialListResponse);
+  rpc AddToSocialList (AddToSocialListRequest) returns (AddToSocialListResponse);
+  rpc RemoveFromSocialList (RemoveFromSocialListRequest) returns (RemoveFromSocialListResponse);
+}

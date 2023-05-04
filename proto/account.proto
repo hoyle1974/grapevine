@@ -1,0 +1,21 @@
+syntax = "proto3";
+import "proto/common.proto";
+
+package proto;
+option go_package = "github.com/hoyle1974/grapevine/proto";
+
+
+message CreateAccountRequest {
+  string username = 1;
+  string password = 2;
+}
+
+service AccountService {
+  rpc CreateAccount (CreateAccountRequest) returns (CreateAccountResponse);
+}
+
+message CreateAccountResponse {
+  Error error = 1;
+  string message = 2;
+  string account_id = 3;
+}

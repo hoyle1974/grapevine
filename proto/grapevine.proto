@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "proto/common.proto";
+
+package proto;
+option go_package = "github.com/hoyle1974/grapevine/proto";
+
+// Represents a Contact lookup by accountId
+message Contact {
+  string accountId = 1;
+  ClientAddress address = 3; 
+}
+
+message Search {
+  Contact requestor = 1;
+  string query = 2;
+}   
+
+
+// A gossip message can/may be repeated till endOfLife reached or dropped before
+message Gossip {
+  google.protobuf.Timestamp endOfLife = 1;
+  oneof GossipUnion {
+    Search search = 2;
+  }
+}
+
+message GossipRequest {
+    repeated Gossip gossip = 1;
+}
+
+message GossipResponse {
+    repeated Gossip gossip = 1;
+}
+
+message SharedInvitationRequest {
+}
+
+message SharedInvitationResponse {
+}
+
+message ChangeDataOwnerRequest {
+}
+
+message ChangeDataOwnerResponse {
+}
+
+message ChangeDataRequest {
+}
+
+message ChangeDataResponse {
+}
+
+message LeaveSharedDataRequest {
+}
+
+message LeaveSharedDataResponse {
+}
+
+service GrapevineService {
+  rpc Gossip (GossipRequest) returns (GossipResponse);
+  rpc SharedInvitation (SharedInvitationRequest) returns (SharedInvitationResponse); 
+  rpc ChangeDataOwner (ChangeDataOwnerRequest) returns (ChangeDataOwnerResponse);
+  rpc ChangeData (ChangeDataRequest) returns (ChangeDataResponse);
+  rpc LeaveSharedData (LeaveSharedDataRequest) returns (LeaveSharedDataResponse);
+}

@@ -13,8 +13,9 @@ message Contact {
 }
 
 message Search {
-  Contact requestor = 1;
-  string query = 2;
+  string search_id = 1;
+  Contact requestor = 2;
+  string query = 3;
 }   
 
 

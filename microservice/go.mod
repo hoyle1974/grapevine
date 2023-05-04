@@ -1,4 +1,4 @@
-module github.com/hoyle1974/sewshul/microservice
+module github.com/hoyle1974/grapevine/microservice
 
 go 1.20
 
@@ -15,7 +15,6 @@ require (
 require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/zerolog/v2 v2.0.0-rc.3
-	github.com/hoyle1974/sewshul/services v0.0.0-20230429174120-2e4f166eb9b9
 	github.com/lib/pq v1.10.9
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect

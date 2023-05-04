@@ -36,7 +36,7 @@ func NewTestAppCtx() AppCtx {
 
 func initDB() {
 	fmt.Println("Testing: run")
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", "localhost", 5432, "postgres", "GAVxFWGABz", "sewshul")
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", "localhost", 5432, "postgres", "GAVxFWGABz", "grapevine")
 	var err error
 	db, err = sql.Open("postgres", psqlconn)
 	if err != nil {

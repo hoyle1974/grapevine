@@ -11,5 +11,5 @@ var (
 	dbport     = flag.Int("dbport", 5432, "The db port")
 	dbuser     = flag.String("dbuser", "postgres", "db user")
 	dbpassword = flag.String("dbpassword", "GAVxFWGABz", "db password")
-	dbname     = flag.String("dbname", "sewshul", "db name")
+	dbname     = flag.String("dbname", "grapevine", "db name")
 )

@@ -4,13 +4,13 @@ import "proto/common.proto";
 package proto;
 option go_package = "github.com/hoyle1974/grapevine/proto";
 
-message LoginRequest {
+message AuthRequest {
   string username = 1;
   string password = 2;
   ClientAddress client_address = 3;
 }
 
-message LoginResponse {
+message AuthResponse {
   Error error = 1;
   string message = 2;
   string user_id = 3;
@@ -20,6 +20,6 @@ message LoginResponse {
   map<string, string> settings = 7;
 }
 
-service LoginService {
-  rpc Login (LoginRequest) returns (LoginResponse);
+service AuthService {
+  rpc Auth (AuthRequest) returns (AuthResponse);
 }

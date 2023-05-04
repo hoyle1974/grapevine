@@ -3,14 +3,12 @@ module github.com/hoyle1974/grapevine/microservice
 go 1.20
 
 require (
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.2.0.20201002093600-73cf2ae9d891
 	github.com/rs/zerolog v1.29.1
 	google.golang.org/grpc v1.54.0
 )
 
-require (
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.2.0.20201002093600-73cf2ae9d891 // indirect
-	golang.org/x/crypto v0.8.0 // indirect
-)
+require github.com/stretchr/testify v1.8.2 // indirect
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect

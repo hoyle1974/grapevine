@@ -6,7 +6,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func Login(appCtx AppCtx, username string, password string, ip net.IP, port int32) (AccountId, error) {
+func Auth(appCtx AppCtx, username string, password string, ip net.IP, port int32) (AccountId, error) {
 	log := appCtx.Log("Login")
 	log.Printf("Received: %v/%v", username, password)
 

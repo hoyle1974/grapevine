@@ -20,7 +20,7 @@ func TestCreateAccountAndLogin(t *testing.T) {
 		t.Error(err)
 	}
 
-	loggedInAccountId1, err := Login(appCtx, username, password, net.ParseIP("192.168.1.1"), 1234)
+	loggedInAccountId1, err := Auth(appCtx, username, password, net.ParseIP("192.168.1.1"), 1234)
 	if err != nil {
 		t.Error(err)
 	}
@@ -59,7 +59,7 @@ func TestSocialList(t *testing.T) {
 			}
 		}
 
-		accountId, err := Login(appCtx, usernames[i], passwords[i], net.ParseIP(fmt.Sprintf("192.168.181.%v", i)), int32(1000+i))
+		accountId, err := Auth(appCtx, usernames[i], passwords[i], net.ParseIP(fmt.Sprintf("192.168.181.%v", i)), int32(1000+i))
 		if err != nil {
 			t.Error(err)
 		}

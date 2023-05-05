@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"crypto/tls"
@@ -104,6 +104,6 @@ func StartClient() {
 
 }
 
-func main() {
-	StartClient()
-}
+//func main() {
+	//StartClient()
+//}

@@ -1,4 +1,4 @@
-package client
+package main
 
 import (
 	"context"
@@ -69,6 +69,12 @@ func register(appCtx services.AppCtx) {
 	pb.RegisterGrapevineServiceServer(appCtx.Server, s)
 }
 
-func GrapevineStart() {
+func tempGrapevineStart() {
 	microservice.Start("grapevine", register)
+}
+
+// ------------------------------------
+
+func StartServer() {
+
 }

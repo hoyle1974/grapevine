@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	GrapevineService_Gossip_FullMethodName           = "/proto.GrapevineService/Gossip"
+	GrapevineService_SearchResult_FullMethodName     = "/proto.GrapevineService/SearchResult"
 	GrapevineService_SharedInvitation_FullMethodName = "/proto.GrapevineService/SharedInvitation"
 	GrapevineService_ChangeDataOwner_FullMethodName  = "/proto.GrapevineService/ChangeDataOwner"
 	GrapevineService_ChangeData_FullMethodName       = "/proto.GrapevineService/ChangeData"
@@ -31,6 +32,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GrapevineServiceClient interface {
 	Gossip(ctx context.Context, in *GossipRequest, opts ...grpc.CallOption) (*GossipResponse, error)
+	SearchResult(ctx context.Context, in *SearchResultRequest, opts ...grpc.CallOption) (*SearchResultResponse, error)
 	SharedInvitation(ctx context.Context, in *SharedInvitationRequest, opts ...grpc.CallOption) (*SharedInvitationResponse, error)
 	ChangeDataOwner(ctx context.Context, in *ChangeDataOwnerRequest, opts ...grpc.CallOption) (*ChangeDataOwnerResponse, error)
 	ChangeData(ctx context.Context, in *ChangeDataRequest, opts ...grpc.CallOption) (*ChangeDataResponse, error)
@@ -48,6 +50,15 @@ func NewGrapevineServiceClient(cc grpc.ClientConnInterface) GrapevineServiceClie
 func (c *grapevineServiceClient) Gossip(ctx context.Context, in *GossipRequest, opts ...grpc.CallOption) (*GossipResponse, error) {
 	out := new(GossipResponse)
 	err := c.cc.Invoke(ctx, GrapevineService_Gossip_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *grapevineServiceClient) SearchResult(ctx context.Context, in *SearchResultRequest, opts ...grpc.CallOption) (*SearchResultResponse, error) {
+	out := new(SearchResultResponse)
+	err := c.cc.Invoke(ctx, GrapevineService_SearchResult_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +106,7 @@ func (c *grapevineServiceClient) LeaveSharedData(ctx context.Context, in *LeaveS
 // for forward compatibility
 type GrapevineServiceServer interface {
 	Gossip(context.Context, *GossipRequest) (*GossipResponse, error)
+	SearchResult(context.Context, *SearchResultRequest) (*SearchResultResponse, error)
 	SharedInvitation(context.Context, *SharedInvitationRequest) (*SharedInvitationResponse, error)
 	ChangeDataOwner(context.Context, *ChangeDataOwnerRequest) (*ChangeDataOwnerResponse, error)
 	ChangeData(context.Context, *ChangeDataRequest) (*ChangeDataResponse, error)
@@ -108,6 +120,9 @@ type UnimplementedGrapevineServiceServer struct {
 
 func (UnimplementedGrapevineServiceServer) Gossip(context.Context, *GossipRequest) (*GossipResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Gossip not implemented")
+}
+func (UnimplementedGrapevineServiceServer) SearchResult(context.Context, *SearchResultRequest) (*SearchResultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchResult not implemented")
 }
 func (UnimplementedGrapevineServiceServer) SharedInvitation(context.Context, *SharedInvitationRequest) (*SharedInvitationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SharedInvitation not implemented")
@@ -148,6 +163,24 @@ func _GrapevineService_Gossip_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GrapevineServiceServer).Gossip(ctx, req.(*GossipRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GrapevineService_SearchResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchResultRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GrapevineServiceServer).SearchResult(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GrapevineService_SearchResult_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GrapevineServiceServer).SearchResult(ctx, req.(*SearchResultRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -234,6 +267,10 @@ var GrapevineService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Gossip",
 			Handler:    _GrapevineService_Gossip_Handler,
+		},
+		{
+			MethodName: "SearchResult",
+			Handler:    _GrapevineService_SearchResult_Handler,
 		},
 		{
 			MethodName: "SharedInvitation",

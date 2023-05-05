@@ -12,11 +12,22 @@ message Contact {
   ClientAddress address = 3; 
 }
 
+// A gossip message used to search for something, if found the result
+// should be returned to the requester via a SearchResult call
 message Search {
   string search_id = 1;
   Contact requestor = 2;
   string query = 3;
 }   
+
+message SearchResultRequest {
+  string search_id = 1;
+  Contact responder = 2;
+  string response = 3;
+}
+
+message SearchResultResponse {
+}
 
 
 // A gossip message can/may be repeated till endOfLife reached or dropped before
@@ -61,6 +72,9 @@ message LeaveSharedDataResponse {
 
 service GrapevineService {
   rpc Gossip (GossipRequest) returns (GossipResponse);
+
+  rpc SearchResult (SearchResultRequest) returns (SearchResultResponse);
+
   rpc SharedInvitation (SharedInvitationRequest) returns (SharedInvitationResponse); 
   rpc ChangeDataOwner (ChangeDataOwnerRequest) returns (ChangeDataOwnerResponse);
   rpc ChangeData (ChangeDataRequest) returns (ChangeDataResponse);

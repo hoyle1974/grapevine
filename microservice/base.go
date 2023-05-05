@@ -2,7 +2,6 @@ package microservice
 
 import (
 	"flag"
-	"fmt"
 	"net"
 	"os"
 
@@ -39,7 +38,8 @@ func Start(name string, register func(appCtx services.AppCtx)) {
 	l.Info().Msg("Starting " + name + " microservice")
 
 	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", *ip, *port))
+	addr := services.NewServerAddress(net.ParseIP(*ip), int32(*port))
+	lis, err := net.Listen("tcp", addr.String())
 	if err != nil {
 		log.Fatal().AnErr("error", err).Msg("failed to listen")
 	}
@@ -53,7 +53,7 @@ func Start(name string, register func(appCtx services.AppCtx)) {
 		),
 	)
 
-	appCtx := services.NewAppCtx(l, s, db)
+	appCtx := services.NewAppCtx(l, s, db, addr)
 
 	register(appCtx)
 	reflection.Register(s)

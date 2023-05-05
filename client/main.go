@@ -5,6 +5,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hoyle1974/grapevine/microservice"
 	pb "github.com/hoyle1974/grapevine/proto"
 	"github.com/hoyle1974/grapevine/services"
@@ -53,16 +54,21 @@ func (s *server) LeaveSharedData(ctx context.Context, in *pb.LeaveSharedDataRequ
 }
 
 // Client callbacks
-func (s *server) Search(query string) bool {
+func (s *server) OnSearchQuery(query string) bool {
 	return query == "mvp/tictactoe/v1"
 }
 
+func (s *server) OnSharedInvitation() {}
+func (s *server) OnChangeOwner()      {}
+func (s *server) OnChangeData()       {}
+func (s *server) OnLeaveSharedData()  {}
+
 func register(appCtx services.AppCtx) {
 	s := &server{appCtx: appCtx}
-	s.grapevine = NewGrapevine(s)
+	s.grapevine = NewGrapevine(s, services.NewAccountId(uuid.NewString()), appCtx.GetAddr())
 	pb.RegisterGrapevineServiceServer(appCtx.Server, s)
 }
 
-func main() {
+func GrapevineStart() {
 	microservice.Start("grapevine", register)
 }

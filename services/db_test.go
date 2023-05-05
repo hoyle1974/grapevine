@@ -3,6 +3,7 @@ package services
 import (
 	"database/sql"
 	"fmt"
+	"net"
 	"os"
 	"testing"
 
@@ -31,7 +32,7 @@ func NewTestAppCtx() AppCtx {
 		initDB()
 	}
 
-	return NewAppCtx(l, nil, db)
+	return NewAppCtx(l, nil, db, NewServerAddress(net.ParseIP("127.0.0.1"), 8911))
 }
 
 func initDB() {

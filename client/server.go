@@ -14,7 +14,7 @@ import (
 )
 
 type GrapevineServer interface {
-	Start() error
+	Start(net.IP) error
 }
 
 type grapevineServer struct {
@@ -52,7 +52,7 @@ func (g *grapevineServer) gossip(writer http.ResponseWriter, req *http.Request) 
 	*/
 }
 
-func (g *grapevineServer) Start() error {
+func (g *grapevineServer) Start(ip net.IP) error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/gossip", g.gossip)
 	mux.HandleFunc("/gossip/searchresult", g.gossip)
@@ -68,11 +68,10 @@ func (g *grapevineServer) Start() error {
 		log.Fatal(err)
 	}
 
-	ip := GetOutboundIP().String()
 	port := 8911
 
 	for {
-		addr := fmt.Sprintf("%s:%d", ip, port)
+		addr := fmt.Sprintf("%s:%d", ip.String(), port)
 
 		server := http3.Server{
 			Handler:    mux,
@@ -109,8 +108,8 @@ func GetOutboundIP() net.IP {
     return localAddr.IP
 }
 
-func StartClient() {
-	err := NewServer().Start()
+func StartClient(ip net.IP) {
+	err := NewServer().Start(ip)
 	if err != nil {
 		fmt.Println(err)
 	}

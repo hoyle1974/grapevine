@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"net"
 	"time"
 
@@ -12,6 +13,10 @@ type UserContact struct {
 	Ip        net.IP
 	Port      int32
 	Time      time.Time
+}
+
+func (u UserContact) GetURL() string {
+	return fmt.Sprintf("%s:%d", u.Ip.String(), u.Port)
 }
 
 func UpdateUserContact(appCtx AppCtx, accountId AccountId, ip net.IP, port int32) error {

@@ -8,3 +8,8 @@ protos:  proto/account.proto proto/list.proto proto/auth.proto
 	protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/auth.proto
 	protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/grapevine.proto
 
+docker:
+	cd auth && docker build --tag auth . 
+	cd account && docker build --tag account . 
+	cd sociallist/ && docker build --tag sociallist . 
+

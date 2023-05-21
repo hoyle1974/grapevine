@@ -25,10 +25,12 @@ protos:  proto/account.proto proto/list.proto proto/auth.proto
 	protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/auth.proto
 	protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative proto/grapevine.proto
 
+VERSION := $(shell date +%s)
+
 docker:
-	-docker image rm auth
-	-docker image rm k3d-myregistry.localhost:12345/auth:latest
-	cd auth && docker build --tag auth:latest . 
-	docker tag auth:latest k3d-myregistry.localhost:12345/auth:latest
+	#-docker image rm auth
+	#-docker image rm k3d-myregistry.localhost:12345/auth:$(VERSION)
+	cd auth && docker build --tag auth:$(VERSION) . 
+	docker tag auth:$(VERSION) k3d-myregistry.localhost:12345/auth:latest
 	docker push k3d-myregistry.localhost:12345/auth:latest
 

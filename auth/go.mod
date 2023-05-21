@@ -3,9 +3,9 @@ module github.com/hoyle1974/grapevine/auth
 go 1.20
 
 require (
-	github.com/hoyle1974/grapevine/microservice v0.0.0-20230515034820-d1363d0028d3
-	github.com/hoyle1974/grapevine/proto v0.0.0-20230515034820-d1363d0028d3
-	github.com/hoyle1974/grapevine/services v0.0.0-20230515034820-d1363d0028d3
+	github.com/hoyle1974/grapevine/microservice v0.0.0-20230521200335-b93dc48bfb26
+	github.com/hoyle1974/grapevine/proto v0.0.0-20230521200335-b93dc48bfb26
+	github.com/hoyle1974/grapevine/services v0.0.0-20230521200335-b93dc48bfb26
 )
 
 require (

@@ -28,9 +28,13 @@ protos:  proto/account.proto proto/list.proto proto/auth.proto
 VERSION := $(shell date +%s)
 
 docker:
-	#-docker image rm auth
-	#-docker image rm k3d-myregistry.localhost:12345/auth:$(VERSION)
 	cd auth && docker build --tag auth:$(VERSION) . 
+	cd account && docker build --tag account:$(VERSION) . 
+	cd sociallist && docker build --tag sociallist:$(VERSION) . 
 	docker tag auth:$(VERSION) k3d-myregistry.localhost:12345/auth:latest
+	docker tag account:$(VERSION) k3d-myregistry.localhost:12345/account:latest
+	docker tag sociallist:$(VERSION) k3d-myregistry.localhost:12345/sociallist:latest
 	docker push k3d-myregistry.localhost:12345/auth:latest
+	docker push k3d-myregistry.localhost:12345/account:latest
+	docker push k3d-myregistry.localhost:12345/socialist:latest
 

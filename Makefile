@@ -31,10 +31,13 @@ docker:
 	cd auth && docker build --tag auth:$(VERSION) . 
 	cd account && docker build --tag account:$(VERSION) . 
 	cd sociallist && docker build --tag sociallist:$(VERSION) . 
+	cd example/tictactoe && docker build --tag tictactoe:$(VERSION) . 
 	docker tag auth:$(VERSION) k3d-myregistry.localhost:12345/auth:latest
 	docker tag account:$(VERSION) k3d-myregistry.localhost:12345/account:latest
 	docker tag sociallist:$(VERSION) k3d-myregistry.localhost:12345/sociallist:latest
+	docker tag tictactoe:$(VERSION) k3d-myregistry.localhost:12345/tictactoe:latest
 	docker push k3d-myregistry.localhost:12345/auth:latest
 	docker push k3d-myregistry.localhost:12345/account:latest
-	docker push k3d-myregistry.localhost:12345/socialist:latest
+	docker push k3d-myregistry.localhost:12345/sociallist:latest
+	docker push k3d-myregistry.localhost:12345/tictactoe:latest
 

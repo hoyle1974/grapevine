@@ -5,11 +5,13 @@ import (
 	"fmt"
 
 	_ "github.com/lib/pq"
+	"github.com/rs/zerolog"
 )
 
-func DB() (*sql.DB, error) {
+func DB(log zerolog.Logger) (*sql.DB, error) {
 	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", *dbhost, *dbport, *dbuser, *dbpassword, *dbname)
 
+	log.Info().Msg(psqlconn)
 	db, err := sql.Open("postgres", psqlconn)
 	if err != nil {
 		return nil, err

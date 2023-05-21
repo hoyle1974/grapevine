@@ -1,0 +1,15 @@
+auth:
+  postgresPassword: postgres
+  username: grapevine
+  password: grapevine
+  database: grapevine
+#primary:
+  #initdb:
+    #scripts:
+      #init.sql: |
+        #CREATE USER grapevine;
+        #CREATE DATABASE grapevine;
+        #GRANT ALL PRIVILEGES ON DATABASE grapevine TO grapevine;
+  pgHbaConfiguration: |
+    host all all localhost trust
+    host all all 0.0.0.0/0 md5

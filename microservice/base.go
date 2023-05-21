@@ -29,7 +29,7 @@ func Start(name string, register func(appCtx services.AppCtx)) {
 	l := log.With().Str("service", name).Logger()
 
 	l.Info().Msg("Connecting to database")
-	db, err := DB()
+	db, err := DB(l)
 	if err != nil {
 		l.Fatal().AnErr("Error connecting to database", err).Msg("error")
 		return

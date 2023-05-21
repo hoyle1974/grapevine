@@ -57,3 +57,23 @@ spec:
         image: k3d-myregistry.localhost:12345/sociallist:latest
         ports:
         - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tictactoe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tictactoe
+  template:
+    metadata:
+      labels:
+        app: tictactoe
+    spec:
+      containers:
+      - name: tictactoe
+        image: k3d-myregistry.localhost:12345/tictactoe:latest
+        ports:
+        - containerPort: 8080

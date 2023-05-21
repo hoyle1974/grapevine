@@ -13,8 +13,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-const ACCOUNT_URL = "localhost:8080"
-const AUTH_URL = "localhost:8081"
+const ACCOUNT_URL = "account.default.svc.cluster.local:8080"
+const AUTH_URL = "auth.default.svc.cluster.local:8080"
 
 /*
 type Grapevine interface {

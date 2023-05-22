@@ -147,7 +147,7 @@ func (g *grapevineServer) Start(ip net.IP) (int, error) {
 		// },
 	}
 
-	log.Info().Msgf("Listening on %v\n", server.Addr)
+	log.Info().Msgf("Listening on %v", server.Addr)
 	go func() {
 		err := server.ListenAndServeTLS(GetCertificatePaths())
 		if err != nil {

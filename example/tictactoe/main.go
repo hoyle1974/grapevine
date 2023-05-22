@@ -243,7 +243,10 @@ func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
-	info, _ := debug.ReadBuildInfo()
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		panic("couldn't read build info")
+	}
 	log.Info().Msg("Build Info Version: " + info.Main.Version + " " + info.Main.Sum)
 
 	cb := &Callback{}

@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/google/uuid v1.3.0
 	github.com/hoyle1974/grapevine/client v0.0.0-20230522044715-43c547517a58
-	github.com/hoyle1974/grapevine/services v0.0.0-20230504191720-6d33d68a6962
+	github.com/hoyle1974/grapevine/services v0.0.0-20230522131611-c933b99ecbb3
 	github.com/rs/zerolog v1.29.1
 )
 
@@ -14,7 +14,7 @@ require (
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
-	github.com/hoyle1974/grapevine/proto v0.0.0-20230504191720-6d33d68a6962 // indirect
+	github.com/hoyle1974/grapevine/proto v0.0.0-20230522131355-1ead3698b6f4 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect

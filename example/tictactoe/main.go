@@ -243,6 +243,8 @@ func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
+	log.Info().Msg("blah blah blah blech")
+
 	info, ok := debug.ReadBuildInfo()
 	if !ok {
 		panic("couldn't read build info")

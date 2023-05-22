@@ -55,7 +55,7 @@ build-sociallist:
 	cd sociallist && docker build --tag k3d-myregistry.localhost:12345/sociallist:latest .
 
 build-tictactoe:
-	cd example/tictactoe && docker build --tag k3d-myregistry.localhost:12345/tictactoe:latest .
+	docker build --tag k3d-myregistry.localhost:12345/tictactoe:latest -f Dockerfile.tictactoe .
 
 build: build-auth build-account build-sociallist build-tictactoe
 	@echo Build done

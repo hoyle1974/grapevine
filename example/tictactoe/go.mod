@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/google/uuid v1.3.0
-	github.com/hoyle1974/grapevine/client v0.0.0-20230522023623-3cfe560e0b61
+	github.com/hoyle1974/grapevine/client v0.0.0-20230522044715-43c547517a58
 	github.com/hoyle1974/grapevine/services v0.0.0-20230504191720-6d33d68a6962
 	github.com/rs/zerolog v1.29.1
 )

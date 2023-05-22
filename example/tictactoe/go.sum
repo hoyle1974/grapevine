@@ -45,6 +45,8 @@ github.com/hoyle1974/grapevine/client v0.0.0-20230505040542-c5985400f7e8 h1:wtKo
 github.com/hoyle1974/grapevine/client v0.0.0-20230505040542-c5985400f7e8/go.mod h1:DTJfO00hrxgPOgLsktohkvqRkivAHGEV5gxuzsjm+Jk=
 github.com/hoyle1974/grapevine/client v0.0.0-20230522023623-3cfe560e0b61 h1:vzgKftww3ZZq3pqbVflxnrTXx4DdeODCEsAifslJdww=
 github.com/hoyle1974/grapevine/client v0.0.0-20230522023623-3cfe560e0b61/go.mod h1:Gz0PQokIDuA1vjlaoNtvnAh/4DKgA8RJYZl5EmfqQiU=
+github.com/hoyle1974/grapevine/client v0.0.0-20230522044715-43c547517a58 h1:2mz/mpB69EDI+LMPSREWsLOxONOK9JKasAKtKb5l9m0=
+github.com/hoyle1974/grapevine/client v0.0.0-20230522044715-43c547517a58/go.mod h1:Gz0PQokIDuA1vjlaoNtvnAh/4DKgA8RJYZl5EmfqQiU=
 github.com/hoyle1974/grapevine/microservice v0.0.0-20230504191720-6d33d68a6962 h1:dWv+8vb91W8vRqlZf0jKlIYFojT7SHpEKhBj7hohfYA=
 github.com/hoyle1974/grapevine/microservice v0.0.0-20230504191720-6d33d68a6962/go.mod h1:Y29quQHOF9/4UMWqMzP7bUp172/P4uSWm/lzmoVqwpk=
 github.com/hoyle1974/grapevine/proto v0.0.0-20230504191720-6d33d68a6962 h1:i1E6yCYrY1G1t9sqa+G6LlsyxN4mGRdIjYutMRNeeDk=

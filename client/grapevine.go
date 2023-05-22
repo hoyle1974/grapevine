@@ -132,7 +132,7 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 
 // Services access
 func (g *grapevine) CreateAccount(username string, password string) error {
-	log.Info().Msg(ACCOUNT_URL)
+	log.Info().Msg("CreateAccount: " + ACCOUNT_URL)
 	conn, err := grpc.Dial(ACCOUNT_URL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
@@ -152,7 +152,7 @@ func (g *grapevine) CreateAccount(username string, password string) error {
 }
 
 func (g *grapevine) Login(username string, password string, ip net.IP, port int) (services.AccountId, error) {
-	log.Info().Msg(AUTH_URL)
+	log.Info().Msg("Login: " + AUTH_URL)
 	conn, err := grpc.Dial(AUTH_URL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return services.NilAccountId(), err

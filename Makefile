@@ -73,5 +73,7 @@ deploy-tictactoe:
 	docker push k3d-myregistry.localhost:12345/tictactoe:latest
 
 deploy: build deploy-auth deploy-account deploy-sociallist deploy-tictactoe
+	kubectl delete -f grapevine.yaml
+	kubectl create -f grapevine.yaml
 	@echo Deploy done
 

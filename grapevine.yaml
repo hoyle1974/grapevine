@@ -17,6 +17,7 @@ spec:
         image: k3d-myregistry.localhost:12345/auth:latest
         ports:
         - containerPort: 8080
+          name: http
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -37,6 +38,7 @@ spec:
         image: k3d-myregistry.localhost:12345/account:latest
         ports:
         - containerPort: 8080
+          name: http
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -57,6 +59,7 @@ spec:
         image: k3d-myregistry.localhost:12345/sociallist:latest
         ports:
         - containerPort: 8080
+          name: http
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -77,3 +80,40 @@ spec:
         image: k3d-myregistry.localhost:12345/tictactoe:latest
         ports:
         - containerPort: 8080
+          name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth
+spec:
+  selector:
+    app: auth
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: account
+spec:
+  selector:
+    app: account
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sociallist
+spec:
+  selector:
+    app: sociallist
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

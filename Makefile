@@ -45,3 +45,33 @@ docker:
 	docker push k3d-myregistry.localhost:12345/sociallist:latest
 	docker push k3d-myregistry.localhost:12345/tictactoe:latest
 
+build-auth:
+	cd auth && docker build --tag k3d-myregistry.localhost:12345/auth:latest .
+
+build-account:
+	cd account && docker build --tag k3d-myregistry.localhost:12345/account:latest .
+
+build-sociallist:
+	cd sociallist && docker build --tag k3d-myregistry.localhost:12345/sociallist:latest .
+
+build-tictactoe:
+	cd example/tictactoe && docker build --tag k3d-myregistry.localhost:12345/tictactoe:latest .
+
+build: build-auth build-account build-sociallist build-tictactoe
+	@echo Build done
+
+deploy-auth: 
+	docker push k3d-myregistry.localhost:12345/auth:latest
+
+deploy-account: 
+	docker push k3d-myregistry.localhost:12345/account:latest
+
+deploy-sociallist: 
+	docker push k3d-myregistry.localhost:12345/sociallist:latest
+
+deploy-tictactoe: 
+	docker push k3d-myregistry.localhost:12345/tictactoe:latest
+
+deploy: build deploy-auth deploy-account deploy-sociallist deploy-tictactoe
+	@echo Deploy done
+

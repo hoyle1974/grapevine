@@ -14,6 +14,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 
+	"runtime/debug"
+
 	"github.com/hoyle1974/grapevine/client"
 	"github.com/hoyle1974/grapevine/services"
 	"github.com/rs/zerolog"
@@ -240,6 +242,9 @@ func (c *Callback) play() {
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+
+	info, _ := debug.ReadBuildInfo()
+	log.Info().Msg("Build Info Version: " + info.Main.Version + " " + info.Main.Sum)
 
 	cb := &Callback{}
 	cb.grapevine = client.NewGrapevine(cb)

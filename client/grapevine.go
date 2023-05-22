@@ -132,7 +132,9 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 		fmt.Println("Unknown host: " + GOSSIP_ADDR)
 	} else {
 		fmt.Printf("Gossip (%s) IP address: %v", GOSSIP_ADDR, gossipIP)
-		//g.gossip.AddServer(services.NewServerAddress(gossipIP, 8911))
+		if len(gossipIP) > 0 {
+			g.gossip.AddServer(services.NewServerAddress(gossipIP[0], 8911))
+		}
 	}
 
 	g.gossip.AddServer(services.NewServerAddress(ip, 8911))

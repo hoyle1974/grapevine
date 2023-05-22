@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"sync"
 
@@ -15,6 +16,7 @@ import (
 
 const ACCOUNT_URL = "account.default.svc.cluster.local:8080"
 const AUTH_URL = "auth.default.svc.cluster.local:8080"
+const GOSSIP_ADDR = "tictactoe.default.svc.cluster.local"
 
 /*
 type Grapevine interface {
@@ -124,6 +126,14 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 
 	g.gossip = NewGossip(services.NewServerAddress(ip, int32(port)))
 	go g.gossip.StartGossip(g.clientCache)
+
+	gossipIP, err := net.LookupIP(GOSSIP_ADDR)
+	if err != nil {
+		fmt.Println("Unknown host: " + GOSSIP_ADDR)
+	} else {
+		fmt.Printf("Gossip (%s) IP address: %v", GOSSIP_ADDR, gossipIP)
+		//g.gossip.AddServer(services.NewServerAddress(gossipIP, 8911))
+	}
 
 	g.gossip.AddServer(services.NewServerAddress(ip, 8911))
 

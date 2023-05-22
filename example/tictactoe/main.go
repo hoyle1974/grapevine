@@ -249,6 +249,9 @@ func main() {
 	}
 	log.Info().Msg("Build Info Version: " + info.Main.Version + " " + info.Main.Sum)
 
+	log.Info().Msg("Auth URL: " + client.AUTH_URL)
+	log.Info().Msg("Account URL: " + client.ACCOUNT_URL)
+
 	cb := &Callback{}
 	cb.grapevine = client.NewGrapevine(cb)
 	ip := GetOutboundIP()

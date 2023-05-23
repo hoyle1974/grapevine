@@ -79,7 +79,7 @@ func (g *gossip) StartGossip(clientCache GrapevineClientCache) {
 		if err != nil {
 			fmt.Println("Error " + err.Error())
 		} else {
-			fmt.Printf("Sending . . .")
+			fmt.Printf("Sending (%v servers). . . ", len(g.knownServers))
 			for _, addr := range g.knownServers {
 				contact := services.UserContact{
 					Ip:   addr.GetIp(),

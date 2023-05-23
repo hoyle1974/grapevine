@@ -126,6 +126,6 @@ spec:
   selector:
     app: tictactoe
   ports:
-    - protocol: TCP
+    - protocol: UDP
       port: 8911
       targetPort: 8911

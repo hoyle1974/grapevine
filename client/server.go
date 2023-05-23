@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	pb "github.com/hoyle1974/grapevine/proto"
+	"github.com/hoyle1974/grapevine/services"
 	"github.com/rs/zerolog/log"
 
 	"github.com/quic-go/quic-go"
@@ -20,11 +21,13 @@ type GrapevineServer interface {
 	Start(net.IP) (int, error)
 	GetIp() net.IP
 	GetPort() int
+	SetGossip(gossip Gossip)
 }
 
 type grapevineServer struct {
 	ip   net.IP
 	port int
+	g    Gossip
 }
 
 func (g *grapevineServer) GetIp() net.IP {
@@ -33,6 +36,10 @@ func (g *grapevineServer) GetIp() net.IP {
 
 func (g *grapevineServer) GetPort() int {
 	return g.port
+}
+
+func (g *grapevineServer) SetGossip(gossip Gossip) {
+	g.g = gossip
 }
 
 func NewServer() GrapevineServer {
@@ -64,6 +71,15 @@ func (g *grapevineServer) gossip(writer http.ResponseWriter, req *http.Request) 
 		proto.Unmarshal(body, gr)
 
 		fmt.Printf("Gossip: %v\n", gr.Gossip)
+
+		for _, v := range gr.Gossip {
+			s := v.GetSearch()
+			if s != nil {
+				ip := net.ParseIP(s.Requestor.Address.IpAddress)
+				port := s.Requestor.Address.Port
+				g.g.AddServer(services.NewServerAddress(ip, port))
+			}
+		}
 	}
 	if req.Method == "POST" {
 		body, err := io.ReadAll(req.Body)
@@ -132,7 +148,8 @@ func (g *grapevineServer) Start(ip net.IP) (int, error) {
 		g.port++
 	}
 
-	addr := fmt.Sprintf("%s:%d", ip.String(), g.port)
+	//addr := fmt.Sprintf("%s:%d", ip.String(), g.port)
+	addr := fmt.Sprintf("%s:%d", "", g.port)
 
 	server := http3.Server{
 		Handler:    mux,

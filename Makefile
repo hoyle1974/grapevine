@@ -75,5 +75,7 @@ deploy-tictactoe:
 deploy: build deploy-auth deploy-account deploy-sociallist deploy-tictactoe
 	-kubectl delete -f grapevine.yaml
 	kubectl create -f grapevine.yaml
+	kubectl port-forward --namespace default svc/auth 8080:8080 &
+	kubectl port-forward --namespace default svc/account 8081:8080 &
 	@echo Deploy done
 

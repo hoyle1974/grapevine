@@ -5,6 +5,10 @@ import "github.com/hoyle1974/grapevine/services"
 type SearchId string
 type SharedDataId string
 
+func NewSearchId(id string) SearchId {
+	return SearchId(id)
+}
+
 func (s SearchId) String() string {
 	return string(s)
 }

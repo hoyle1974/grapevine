@@ -1,6 +1,15 @@
-FROM golang:1.20
+FROM golang:1.20-bullseye as base
+
 WORKDIR /app
 COPY . ./
 WORKDIR /app/example/tictactoe
-#RUN go mod download
+
 RUN CGO_ENABLED=0 GOOS=linux go build -o /cmd
+
+FROM gcr.io/distroless/static-debian11
+
+COPY --from=base /cmd .
+COPY --from=base /app/ /app/
+
+
+CMD [ "/cmd" ]

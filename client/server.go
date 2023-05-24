@@ -63,43 +63,46 @@ service GrapevineService {
 func (g *grapevineServer) gossip(writer http.ResponseWriter, req *http.Request) {
 	log := g.ctx.NewCtx("gossip")
 
-	if req.Method == "GET" {
-		body, err := io.ReadAll(req.Body)
-		if err != nil {
-			log.Printf("error reading body while handling /distribute: %s", err.Error())
-		}
-		gr := &pb.GossipRequest{}
-		proto.Unmarshal(body, gr)
+	log.Info().Msg("\tReceive")
 
-		log.Printf("Gossip (via GET): %v", gr.Gossip)
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("error reading body while handling /distribute")
+		writer.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+	gr := &pb.GossipRequest{}
+	proto.Unmarshal(body, gr)
 
-		for _, v := range gr.Gossip {
-			s := v.GetSearch()
-			if s != nil {
-				ip := net.ParseIP(s.Requestor.Address.IpAddress)
-				port := s.Requestor.Address.Port
-				g.g.AddServer(services.NewServerAddress(ip, port))
+	log.Info().Msgf("\tContains %v messages", len(gr.Gossip))
+
+	for _, v := range gr.Gossip {
+		s := v.GetSearch()
+		if s != nil {
+			// If we have seen this before, then we can ignore it
+			if g.g.RegisterSearchRequest(NewSearchId(s.SearchId)) {
+				continue
 			}
+
+			// We got a search request, make sure we add the requestor to our known list
+			ip := net.ParseIP(s.Requestor.Address.IpAddress)
+			port := s.Requestor.Address.Port
+			log.Info().Msgf("\t\tSearch from %v:%v", ip, port)
+			g.g.AddServer(services.NewServerAddress(ip, port))
+
+			// todo - If we can answer this search request, then we should respond to it
 		}
 	}
-	if req.Method == "POST" {
-		body, err := io.ReadAll(req.Body)
-		if err != nil {
-			log.Printf("error reading body while handling /distribute: %s", err.Error())
-		}
-		gr := &pb.GossipResponse{}
-		proto.Unmarshal(body, gr)
-		log.Printf("Gossip (via POST): %v", gr.Gossip)
 
-		for _, v := range gr.Gossip {
-			s := v.GetSearch()
-			if s != nil {
-				ip := net.ParseIP(s.Requestor.Address.IpAddress)
-				port := s.Requestor.Address.Port
-				g.g.AddServer(services.NewServerAddress(ip, port))
-			}
-		}
+	body, err = proto.Marshal(&pb.GossipResponse{})
+	if err != nil {
+		log.Error().Err(err).Msg("error writing response")
+		writer.WriteHeader(http.StatusServiceUnavailable)
+		return
 	}
+
+	writer.WriteHeader(http.StatusOK)
+	writer.Write(body)
 }
 
 func (g *grapevineServer) isPortAvailable(ip net.IP, port int) bool {

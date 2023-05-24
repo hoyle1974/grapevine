@@ -63,20 +63,15 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 	go g.gossip.StartGossip(g.clientCache)
 	g.server.SetGossip(g.gossip)
 
-	gossipIP, err := net.LookupIP(*gossipAddr)
-	if err != nil {
-		ctx.Error().Caller().Msg("Unknown host: " + *gossipAddr)
-	} else {
-		ctx.Info().Msgf("Gossip (%s) IP address: %v", *gossipAddr, gossipIP)
-		if len(gossipIP) > 0 {
-			g.gossip.AddServer(services.NewServerAddress(gossipIP[0], 8911))
-		}
-	}
-	// g.gossip.AddServer(services.NewServerAddress(net.ParseIP("10.42.0.130"), 8911))
-	// g.gossip.AddServer(services.NewServerAddress(net.ParseIP("10.42.0.140"), 8911))
-	// g.gossip.AddServer(services.NewServerAddress(net.ParseIP("10.42.0.150"), 8911))
-	// g.gossip.AddServer(services.NewServerAddress(net.ParseIP("127.0.0.1"), 8911))
-
+	// gossipIP, err := net.LookupIP(*gossipAddr)
+	// if err != nil {
+	// 	ctx.Error().Caller().Msg("Unknown host: " + *gossipAddr)
+	// } else {
+	// 	ctx.Info().Msgf("Gossip (%s) IP address: %v", *gossipAddr, gossipIP)
+	// 	if len(gossipIP) > 0 {
+	// 		g.gossip.AddServer(services.NewServerAddress(gossipIP[0], 8911))
+	// 	}
+	// }
 	g.gossip.AddServer(services.NewServerAddress(ip, 8911))
 
 	return port, nil

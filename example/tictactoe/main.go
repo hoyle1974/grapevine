@@ -247,6 +247,11 @@ func main() {
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	ctx := client.NewCallCtxWithApp("tictactoe")
 
+	ctx.Info().Msg("Flags:")
+	flag.CommandLine.VisitAll(func(flag *flag.Flag) {
+		ctx.Info().Msg(fmt.Sprintf("\t%v:%v", flag.Name, flag.Value))
+	})
+
 	info, ok := debug.ReadBuildInfo()
 	if !ok {
 		panic("couldn't read build info")

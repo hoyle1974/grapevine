@@ -18,6 +18,15 @@ spec:
         ports:
         - containerPort: 8911
           name: gossip
+        env:
+        - name: ACCOUNT_URL
+          value: "account.default.svc.cluster.local:8080"
+        - name: AUTH_URL
+          value: "auth.default.svc.cluster.local:8080"
+        - name: GOSSIP_ADDR
+          value: "tictactoe.default.svc.cluster.local"
+        command: ["/cmd"]
+        args: ["-account_url","$(ACCOUNT_URL)","-auth_url","$(AUTH_URL)","-gossip_addr","$(GOSSIP_ADDR)"]
 ---
 apiVersion: v1
 kind: Service

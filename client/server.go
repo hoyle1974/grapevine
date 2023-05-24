@@ -11,7 +11,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	pb "github.com/hoyle1974/grapevine/proto"
 	"github.com/hoyle1974/grapevine/services"
-	"github.com/rs/zerolog/log"
 
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
@@ -25,6 +24,7 @@ type GrapevineServer interface {
 }
 
 type grapevineServer struct {
+	ctx  CallCtx
 	ip   net.IP
 	port int
 	g    Gossip
@@ -42,8 +42,8 @@ func (g *grapevineServer) SetGossip(gossip Gossip) {
 	g.g = gossip
 }
 
-func NewServer() GrapevineServer {
-	return &grapevineServer{}
+func NewServer(ctx CallCtx) GrapevineServer {
+	return &grapevineServer{ctx: ctx.NewCtx("server")}
 }
 
 /*
@@ -61,16 +61,17 @@ service GrapevineService {
 */
 
 func (g *grapevineServer) gossip(writer http.ResponseWriter, req *http.Request) {
-	fmt.Println("***** receive a gossip")
+	log := g.ctx.NewCtx("gossip")
+
 	if req.Method == "GET" {
 		body, err := io.ReadAll(req.Body)
 		if err != nil {
-			fmt.Printf("error reading body while handling /distribute: %s\n", err.Error())
+			log.Printf("error reading body while handling /distribute: %s", err.Error())
 		}
 		gr := &pb.GossipRequest{}
 		proto.Unmarshal(body, gr)
 
-		fmt.Printf("Gossip: %v\n", gr.Gossip)
+		log.Printf("Gossip (via GET): %v", gr.Gossip)
 
 		for _, v := range gr.Gossip {
 			s := v.GetSearch()
@@ -84,15 +85,25 @@ func (g *grapevineServer) gossip(writer http.ResponseWriter, req *http.Request) 
 	if req.Method == "POST" {
 		body, err := io.ReadAll(req.Body)
 		if err != nil {
-			fmt.Printf("error reading body while handling /distribute: %s\n", err.Error())
+			log.Printf("error reading body while handling /distribute: %s", err.Error())
 		}
 		gr := &pb.GossipResponse{}
 		proto.Unmarshal(body, gr)
-		fmt.Printf("Gossip: %v\n", gr.Gossip)
+		log.Printf("Gossip (via POST): %v", gr.Gossip)
+
+		for _, v := range gr.Gossip {
+			s := v.GetSearch()
+			if s != nil {
+				ip := net.ParseIP(s.Requestor.Address.IpAddress)
+				port := s.Requestor.Address.Port
+				g.g.AddServer(services.NewServerAddress(ip, port))
+			}
+		}
 	}
 }
 
-func isPortAvailable(ip net.IP, port int) bool {
+func (g *grapevineServer) isPortAvailable(ip net.IP, port int) bool {
+	log := g.ctx.NewCtx("isPortAvailable")
 
 	addr := net.UDPAddr{
 		IP:   ip,
@@ -126,6 +137,8 @@ func GetCertificatePaths() (string, string) {
 }
 
 func (g *grapevineServer) Start(ip net.IP) (int, error) {
+	log := g.ctx.NewCtx("Start")
+
 	g.ip = ip
 
 	mux := http.NewServeMux()
@@ -137,31 +150,18 @@ func (g *grapevineServer) Start(ip net.IP) (int, error) {
 
 	quicConf := &quic.Config{}
 
-	// pool, err := x509.SystemCertPool()
-	// if err != nil {
-	// 	return 0, err
-	// }
-
 	g.port = 8911
 
-	for isPortAvailable(ip, g.port) == false {
+	for g.isPortAvailable(ip, g.port) == false {
 		g.port++
 	}
 
-	//addr := fmt.Sprintf("%s:%d", ip.String(), g.port)
 	addr := fmt.Sprintf("%s:%d", "", g.port)
 
 	server := http3.Server{
 		Handler:    mux,
 		Addr:       addr,
 		QuicConfig: quicConf,
-		// TLSConfig: &tls.Config{
-		// 	ServerName:            "localhost",
-		// 	RootCAs:               pool,
-		// 	InsecureSkipVerify:    true,
-		// 	VerifyConnection:      nil,
-		// 	VerifyPeerCertificate: nil,
-		// },
 	}
 
 	log.Info().Msgf("Listening on %v", server.Addr)

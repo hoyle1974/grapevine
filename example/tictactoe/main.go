@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"math/rand"
 	"net"
@@ -23,10 +24,10 @@ import (
 
 var grapevine client.Grapevine
 
-func GetOutboundIP() net.IP {
+func GetOutboundIP(ctx client.CallCtx) net.IP {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
-		log.Fatal().Err(err)
+		ctx.Fatal().Err(err)
 		panic(err)
 	}
 	defer conn.Close()
@@ -240,44 +241,42 @@ func (c *Callback) play() {
 }
 
 func main() {
+	flag.Parse()
+
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-
-	log.Info().Msg("blah blah blah blech")
+	ctx := client.NewCallCtxWithApp("tictactoe")
 
 	info, ok := debug.ReadBuildInfo()
 	if !ok {
 		panic("couldn't read build info")
 	}
-	log.Info().Msg("Build Info Version: " + info.Main.Version + " " + info.Main.Sum)
-
-	log.Info().Msg("Auth URL: " + client.AUTH_URL)
-	log.Info().Msg("Account URL: " + client.ACCOUNT_URL)
+	ctx.Info().Msg("Build Info Version: " + info.Main.Version + " " + info.Main.Sum)
 
 	cb := &Callback{}
-	cb.grapevine = client.NewGrapevine(cb)
-	ip := GetOutboundIP()
+	cb.grapevine = client.NewGrapevine(cb, ctx)
+	ip := GetOutboundIP(ctx)
 	port, err := cb.grapevine.Start(ip)
 	if err != nil {
-		log.Error().Err(err).Msg("Error starting grapevine")
+		ctx.Error().Err(err).Msg("Error starting grapevine")
 	}
 
 	username := fmt.Sprintf("U%d", rand.Int()%1000000)
 	password := "P" + uuid.New().String()
-	log.Info().Msgf("Creating account with User %v and Password %v", username, password)
+	ctx.Info().Msgf("Creating account with User %v and Password %v", username, password)
 	err = cb.grapevine.CreateAccount(username, password)
 	if err != nil {
-		log.Error().Err(err).Msg("Error creating account")
+		ctx.Error().Err(err).Msg("Error creating account")
 		return
 	}
 
-	log.Info().Msg("Logging in")
+	ctx.Info().Msg("Logging in")
 	accountId, err := cb.grapevine.Login(username, password, ip, port)
 	if err != nil {
-		log.Error().Err(err).Msg("Error logging in")
+		ctx.Error().Err(err).Msg("Error logging in")
 		return
 	}
-	log.Info().Msgf("Logged in to account: %s", accountId.String())
+	ctx.Info().Msgf("Logged in to account: %s", accountId.String())
 
 	cb.grapevine.Search(gameType)
 

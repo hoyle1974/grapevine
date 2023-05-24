@@ -8,79 +8,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/hoyle1974/grapevine/proto"
 	"github.com/hoyle1974/grapevine/services"
-	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
-
-const ACCOUNT_URL = "account.default.svc.cluster.local:8080"
-const AUTH_URL = "auth.default.svc.cluster.local:8080"
-const GOSSIP_ADDR = "tictactoe.default.svc.cluster.local"
-
-//const ACCOUNT_URL = "localhost:8081"
-//const AUTH_URL = "localhost:8080"
-//const GOSSIP_ADDR = "localhost"
-
-/*
-type Grapevine interface {
-	OnGossipSearch(appCtx services.AppCtx, requstor services.UserContact, query string, orig *pb.Search)
-}
-
-type GrapevineClientCallback interface {
-	OnSearchQuery(query string) bool
-}
-
-func NewGrapevine(cb GrapevineClientCallback, accountId services.AccountId, addr services.ServerAddress) Grapevine {
-	myContact := &pb.Contact{
-		AccountId: accountId.String(),
-		Address: &pb.ClientAddress{
-			IpAddress: addr.GetIp().String(),
-			Port:      addr.GetPort(),
-		},
-	}
-	return &grapevine{cb: cb, myContact: myContact}
-}
-
-type grapevine struct {
-	lock       sync.Mutex
-	cb         GrapevineClientCallback
-	gossipList []interface{}
-	myContact  *pb.Contact
-}
-
-func (g *grapevine) getClientFor(contact services.UserContact) (pb.GrapevineServiceClient, error) {
-
-	url := fmt.Sprintf("%v:%d", contact.Ip, contact.Port)
-	conn, err := grpc.Dial(url, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, err
-	}
-
-	return pb.NewGrapevineServiceClient(conn), nil
-}
-
-func (g *grapevine) OnGossipSearch(appCtx services.AppCtx, requestor services.UserContact, query string, orig *pb.Search) {
-	g.lock.Lock()
-	defer g.lock.Unlock()
-
-	//Process the query, if we have an answer, respond, otherwise add to outgoing gossip
-	if g.cb.OnSearchQuery(query) {
-		// Notify the requestor that we are a match for the query
-		client, err := g.getClientFor(requestor)
-		if err != nil {
-			client.SearchResult(context.Background(), &pb.SearchResultRequest{
-				SearchId:  orig.SearchId,
-				Responder: g.myContact,
-				Response:  "",
-			})
-		}
-	}
-
-	// Add to gossip list
-	g.gossipList = append(g.gossipList, orig)
-
-}
-*/
 
 // Grapevine
 
@@ -98,6 +28,7 @@ type Grapevine interface {
 
 type grapevine struct {
 	lock        sync.Mutex
+	ctx         CallCtx
 	cb          ClientCallback
 	server      GrapevineServer
 	clientCache GrapevineClientCache
@@ -105,44 +36,45 @@ type grapevine struct {
 	gossip      Gossip
 }
 
-func NewGrapevine(cb ClientCallback) Grapevine {
-	return &grapevine{cb: cb}
+func NewGrapevine(cb ClientCallback, ctx CallCtx) Grapevine {
+	return &grapevine{cb: cb, ctx: ctx}
 }
 
 func (g *grapevine) Start(ip net.IP) (int, error) {
+	ctx := g.ctx.NewCtx("Start")
 	g.lock.Lock()
 	defer g.lock.Unlock()
 
-	log.Info().Msg("Starting grapevine . . ")
+	ctx.Info().Msg("Starting grapevine . . ")
 
 	// Start the server
-	log.Info().Msg("Starting server component . . ")
-	g.server = NewServer()
+	ctx.Info().Msg("Starting server component . . ")
+	g.server = NewServer(ctx)
 	port, err := g.server.Start(ip)
 	if err != nil {
 		return 0, err
 	}
 
 	// Create the client cache manager
-	log.Info().Msg("Creating client cache manager . . ")
+	ctx.Info().Msg("Creating client cache manager . . ")
 	g.clientCache = NewGrapevineClientCache()
 
-	g.gossip = NewGossip(services.NewServerAddress(ip, int32(port)))
+	g.gossip = NewGossip(ctx, services.NewServerAddress(ip, int32(port)))
 	go g.gossip.StartGossip(g.clientCache)
 	g.server.SetGossip(g.gossip)
 
-	gossipIP, err := net.LookupIP(GOSSIP_ADDR)
+	gossipIP, err := net.LookupIP(*gossipAddr)
 	if err != nil {
-		log.Error().Msg("Unknown host: " + GOSSIP_ADDR)
+		ctx.Error().Caller().Msg("Unknown host: " + *gossipAddr)
 	} else {
-		log.Info().Msgf("Gossip (%s) IP address: %v", GOSSIP_ADDR, gossipIP)
+		ctx.Info().Msgf("Gossip (%s) IP address: %v", *gossipAddr, gossipIP)
 		if len(gossipIP) > 0 {
 			g.gossip.AddServer(services.NewServerAddress(gossipIP[0], 8911))
 		}
 	}
-	g.gossip.AddServer(services.NewServerAddress(net.ParseIP("10.42.0.130"), 8911))
-	g.gossip.AddServer(services.NewServerAddress(net.ParseIP("10.42.0.140"), 8911))
-	g.gossip.AddServer(services.NewServerAddress(net.ParseIP("10.42.0.150"), 8911))
+	// g.gossip.AddServer(services.NewServerAddress(net.ParseIP("10.42.0.130"), 8911))
+	// g.gossip.AddServer(services.NewServerAddress(net.ParseIP("10.42.0.140"), 8911))
+	// g.gossip.AddServer(services.NewServerAddress(net.ParseIP("10.42.0.150"), 8911))
 	// g.gossip.AddServer(services.NewServerAddress(net.ParseIP("127.0.0.1"), 8911))
 
 	g.gossip.AddServer(services.NewServerAddress(ip, 8911))
@@ -152,8 +84,10 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 
 // Services access
 func (g *grapevine) CreateAccount(username string, password string) error {
-	log.Info().Msg("CreateAccount: " + ACCOUNT_URL)
-	conn, err := grpc.Dial(ACCOUNT_URL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	log := g.ctx.NewCtx("CreateAccount")
+
+	log.Info().Msg("CreateAccount: " + *accountURL)
+	conn, err := grpc.Dial(*accountURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
@@ -172,8 +106,10 @@ func (g *grapevine) CreateAccount(username string, password string) error {
 }
 
 func (g *grapevine) Login(username string, password string, ip net.IP, port int) (services.AccountId, error) {
-	log.Info().Msg("Login: " + AUTH_URL)
-	conn, err := grpc.Dial(AUTH_URL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	log := g.ctx.NewCtx("Login")
+
+	log.Info().Msg("Login: " + *authURL)
+	conn, err := grpc.Dial(*authURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return services.NilAccountId(), err
 	}
@@ -216,6 +152,8 @@ func (g *grapevine) Invite(s SharedData, recipient services.UserContact, as stri
 
 // Initiating a search
 func (g *grapevine) Search(query string) SearchId {
+	log := g.ctx.NewCtx("Search")
+
 	// Search using the gossip protocol
 	log.Info().Msgf("Gossipping search for %v", query)
 

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tictactoe
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: tictactoe
+  template:
+    metadata:
+      labels:
+        app: tictactoe
+    spec:
+      containers:
+      - name: tictactoe
+        image: k3d-myregistry.localhost:12345/tictactoe:latest
+        ports:
+        - containerPort: 8911
+          name: gossip
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tictactoe
+spec:
+  selector:
+    app: tictactoe
+  ports:
+    - protocol: UDP
+      port: 8911
+      targetPort: 8911

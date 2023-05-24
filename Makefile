@@ -57,7 +57,7 @@ build-sociallist:
 build-tictactoe:
 	docker build --tag k3d-myregistry.localhost:12345/tictactoe:latest -f Dockerfile.tictactoe .
 
-build: build-auth build-account build-sociallist build-tictactoe
+build: build-auth build-account build-sociallist 
 	@echo Build done
 
 deploy-auth: 
@@ -72,10 +72,14 @@ deploy-sociallist:
 deploy-tictactoe: 
 	docker push k3d-myregistry.localhost:12345/tictactoe:latest
 
-deploy: build deploy-auth deploy-account deploy-sociallist deploy-tictactoe
+deploy: build deploy-auth deploy-account deploy-sociallist 
 	-kubectl delete -f grapevine.yaml
 	kubectl create -f grapevine.yaml
 	kubectl port-forward --namespace default svc/auth 8080:8080 &
 	kubectl port-forward --namespace default svc/account 8081:8080 &
 	@echo Deploy done
+
+tictactoe: build-tictactoe deploy-tictactoe
+	-kubectl delete -f tictactoe.yaml
+	kubectl create -f tictactoe.yaml
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hoyle1974/grapevine/proto"
@@ -30,7 +31,7 @@ type grapevine struct {
 	lock        sync.Mutex
 	ctx         CallCtx
 	cb          ClientCallback
-	server      GrapevineServer
+	listener    GrapevineListener
 	clientCache GrapevineClientCache
 	accountId   services.AccountId
 	gossip      Gossip
@@ -48,9 +49,9 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 	ctx.Info().Msg("Starting grapevine . . ")
 
 	// Start the server
-	ctx.Info().Msg("Starting server component . . ")
-	g.server = NewServer(ctx)
-	port, err := g.server.Start(ip)
+	ctx.Info().Msg("Starting listener . . ")
+	g.listener = NewGrapevineListener(ctx)
+	port, err := g.listener.Listen(ip)
 	if err != nil {
 		return 0, err
 	}
@@ -60,18 +61,9 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 	g.clientCache = NewGrapevineClientCache()
 
 	g.gossip = NewGossip(ctx, services.NewServerAddress(ip, int32(port)))
-	go g.gossip.StartGossip(g.clientCache)
-	g.server.SetGossip(g.gossip)
+	go g.gossip.GossipLoop(g.clientCache)
+	g.listener.SetGossip(g.gossip)
 
-	// gossipIP, err := net.LookupIP(*gossipAddr)
-	// if err != nil {
-	// 	ctx.Error().Caller().Msg("Unknown host: " + *gossipAddr)
-	// } else {
-	// 	ctx.Info().Msgf("Gossip (%s) IP address: %v", *gossipAddr, gossipIP)
-	// 	if len(gossipIP) > 0 {
-	// 		g.gossip.AddServer(services.NewServerAddress(gossipIP[0], 8911))
-	// 	}
-	// }
 	g.gossip.AddServer(services.NewServerAddress(ip, 8911))
 
 	return port, nil
@@ -152,24 +144,15 @@ func (g *grapevine) Search(query string) SearchId {
 	// Search using the gossip protocol
 	log.Info().Msgf("Gossipping search for %v", query)
 
-	// Create a search id
-	searchId := SearchId(uuid.New().String())
+	rumor := NewSearchRumor(NewRumor(
+		uuid.New(),
+		time.Now().Add(time.Minute),
+		g.accountId,
+		services.NewServerAddress(g.listener.GetIp(), int32(g.listener.GetPort())),
+	), query)
 
-	search := &proto.Search{
-		SearchId: searchId.String(),
-		Query:    query,
-		Requestor: &proto.Contact{
-			AccountId: g.accountId.String(),
-			Address: &proto.ClientAddress{
-				IpAddress: g.server.GetIp().String(),
-				Port:      int32(g.server.GetPort()),
-			},
-		},
-	}
-	gossip_search := &proto.Gossip_Search{Search: search}
+	g.gossip.AddToGossip(rumor)
 
-	g.gossip.AddToGossip(gossip_search)
-
-	return searchId
+	return SearchId(rumor.rumorId.String())
 
 }

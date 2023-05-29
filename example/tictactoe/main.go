@@ -22,11 +22,12 @@ import (
 	"github.com/rs/zerolog"
 )
 
-var grapevine client.Grapevine
-
 func GetOutboundIP(ctx client.CallCtx) net.IP {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
+		if err.Error() == "dial udp 8.8.8.8:80: connect: network is unreachable" {
+			return net.ParseIP("127.0.0.1")
+		}
 		ctx.Fatal().Err(err)
 		panic(err)
 	}
@@ -261,6 +262,7 @@ func main() {
 	cb := &Callback{}
 	cb.grapevine = client.NewGrapevine(cb, ctx)
 	ip := GetOutboundIP(ctx)
+	ctx.Info().Msgf("Outbound IP is: %v", ip)
 	port, err := cb.grapevine.Start(ip)
 	if err != nil {
 		ctx.Error().Err(err).Msg("Error starting grapevine")

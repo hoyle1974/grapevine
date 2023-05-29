@@ -3,145 +3,130 @@ package client
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net"
 	"sync"
 	"time"
 
 	protoc "github.com/golang/protobuf/proto"
+	"github.com/google/uuid"
 	"github.com/hoyle1974/grapevine/proto"
 	"github.com/hoyle1974/grapevine/services"
-	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Gossip interface {
-	AddToGossip(proto interface{})
-	StartGossip(clientCache GrapevineClientCache)
+	AddToGossip(rumor Rumor)
+	GossipLoop(clientCache GrapevineClientCache)
 	AddServer(contact services.ServerAddress)
-	RegisterSearchRequest(searchId SearchId) bool
 }
 
 type gossip struct {
 	lock          sync.Mutex
 	ctx           CallCtx
 	self          services.ServerAddress
-	toGossip      []*proto.Gossip
-	knownServers  []services.ServerAddress
+	rumors        Rumors
+	mongers       GossipMongers
 	knownSearches map[string]bool
 }
 
 func NewGossip(ctx CallCtx, self services.ServerAddress) Gossip {
-	return &gossip{self: self, ctx: ctx.NewCtx("gossip")}
-}
-
-func (g *gossip) RegisterSearchRequest(searchId SearchId) bool {
-	log := g.ctx.NewCtx("RegisterSearchRequest").Log()
-	g.lock.Lock()
-	defer g.lock.Unlock()
-
-	_, ok := g.knownSearches[searchId.String()]
-	if !ok {
-		log.Info().Msgf("Register search id: %v", searchId)
-		g.knownSearches[searchId.String()] = true
-		return false
+	return &gossip{
+		self:    self,
+		ctx:     ctx.NewCtx("gossip"),
+		mongers: NewGossipMongers(ctx, self),
+		rumors:  NewRumors(ctx),
 	}
-
-	return true
 }
 
 func (g *gossip) AddServer(addr services.ServerAddress) {
-	log := g.ctx.NewCtx("AddServer").Log()
-	if net.IP.Equal(g.self.GetIp(), addr.GetIp()) && g.self.GetPort() == addr.GetPort() {
-		log.Info().Msg("	\tskipping self")
-		return
-	}
-	g.lock.Lock()
-	defer g.lock.Unlock()
-
-	// Do we know about this server?
-	for _, s := range g.knownServers {
-		if s.String() == addr.String() {
-			return
-		}
-	}
-
-	log.Info().Msgf("\tserver [%s:%d]", addr.GetIp(), addr.GetPort())
-	g.knownServers = append(g.knownServers, addr)
+	g.mongers.AddMonger(addr)
 }
 
-func (g *gossip) AddToGossip(gsp interface{}) {
-	g.lock.Lock()
-	defer g.lock.Unlock()
+func (g *gossip) AddToGossip(rumor Rumor) {
+	g.mongers.AddMonger(rumor.GetCreatorAddress())
 
-	search := gsp.(*proto.Gossip_Search)
-
-	g.toGossip = append(g.toGossip, &proto.Gossip{
-		EndOfLife:   timestamppb.New(time.Now().Add(time.Hour)),
-		GossipUnion: search,
-	})
+	g.rumors.AddRumor(rumor)
 }
 
 func (g *gossip) getGossipRequest() *proto.GossipRequest {
-	if len(g.toGossip) == 0 {
-		return nil
-	}
-	return &proto.GossipRequest{Gossip: g.toGossip}
+	return g.rumors.GetProtobuf()
 }
 
-func (g *gossip) clearGossip() {
-	g.toGossip = []*proto.Gossip{}
-}
-
-func (g *gossip) StartGossip(clientCache GrapevineClientCache) {
-	log := g.ctx.NewCtx("StartGossip")
+func (g *gossip) GossipLoop(clientCache GrapevineClientCache) {
+	log := g.ctx.NewCtx("GossipLoop")
 
 	for {
 		time.Sleep(time.Second * 5)
 
+		// Get a random address
+		addr := g.mongers.GetRandomServerAddress()
+		if addr == nil {
+			// No one to gossip to
+			log.Warn().Msg("No servers to gossip to")
+			continue
+		}
+
 		g.lock.Lock()
 
-		// Remove anything expired from the gossip chain
-		// for i := len(g.toGossip) - 1; i >= 0; i-- {
-		// 	if g.toGossip[i].EndOfLife.AsTime().After(time.Now()) {
-		// 		log.Printf("End of life found: %v", g.toGossip[i])
-		// 		g.toGossip = append(g.toGossip[:i], g.toGossip[i+1:]...)
-		// 	}
-		// }
-
-		// Try to send the gossip chain to everyone we know about
 		req := g.getGossipRequest()
 		if req == nil {
+			log.Warn().Msg("Nothing to gossip about, this is weird")
 			continue
 		}
 		b, err := protoc.Marshal(req)
-		success := false
 		if err != nil {
 			log.Error().Err(err).Msg("Can't unmarshal")
+			continue
 		} else {
-			log.Info().Msgf("Sending (%v servers). . . ", len(g.knownServers))
+			log.Info().Msgf("Sending . . . ")
 
-			tmp := g.knownServers[:0]
-			for _, addr := range g.knownServers {
-				contact := services.UserContact{
-					Ip:   addr.GetIp(),
-					Port: addr.GetPort(),
-				}
+			contact := services.UserContact{
+				Ip:   addr.GetIp(),
+				Port: addr.GetPort(),
+			}
 
-				log.Info().Msgf("\tGossiping to %v:%v", contact.Ip, contact.Port)
-				client := clientCache.GetClient(contact).GetClient()
-				resp, err := client.Post(fmt.Sprintf("https://%s/gossip", contact.GetURL()), "grpc-message-type", bytes.NewReader(b))
-				if err != nil {
-					log.Error().Err(err).Msg("\tTried to post but got error")
-				} else {
-					log.Info().Msgf("\tResponse: %v", resp.StatusCode)
-					tmp = append(tmp, addr)
-					success = true
+			log.Info().Msgf("\tGossiping to %v:%v", contact.Ip, contact.Port)
+			client := clientCache.GetClient(contact).GetClient()
+			resp, err := client.Post(fmt.Sprintf("https://%s/gossip", contact.GetURL()), "grpc-message-type", bytes.NewReader(b))
+			if err != nil {
+				log.Error().Err(err).Msg("\tTried to post but got error")
+				g.mongers.RemoveMonger(*addr)
+				continue
+			} else {
+				log.Info().Msgf("\tResponse: %v", resp.StatusCode)
+			}
+
+			b, err := io.ReadAll(resp.Body)
+			if err != nil {
+				log.Error().Err(err).Msg("\tError reading body of response")
+			}
+
+			gresp := proto.GossipResponse{}
+			err = protoc.Unmarshal(b, &gresp)
+			if err != nil {
+				log.Error().Err(err).Msg("\tError unmarshaling response to our gossip")
+			}
+
+			for _, gossip := range gresp.Gossip {
+				search := gossip.GetSearch()
+				if search != nil {
+					rumorId, err := uuid.Parse(search.SearchId)
+					if err != nil {
+						log.Warn().Err(err).Msgf("Couldn't parse: %v", search.SearchId)
+						continue
+					}
+
+					rumor := NewSearchRumor(NewRumor(
+						rumorId,
+						gossip.EndOfLife.AsTime(),
+						services.NewAccountId(search.Requestor.AccountId),
+						services.NewServerAddress(net.ParseIP(search.Requestor.Address.IpAddress), search.Requestor.Address.Port),
+					), search.Query)
+
+					go g.AddToGossip(rumor)
 				}
 			}
-			g.knownServers = tmp
-		}
 
-		if success {
-			g.clearGossip()
 		}
 
 		g.lock.Unlock()

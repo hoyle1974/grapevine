@@ -9,6 +9,7 @@ import (
 	"runtime"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/google/uuid"
 	pb "github.com/hoyle1974/grapevine/proto"
 	"github.com/hoyle1974/grapevine/services"
 
@@ -16,34 +17,34 @@ import (
 	"github.com/quic-go/quic-go/http3"
 )
 
-type GrapevineServer interface {
-	Start(net.IP) (int, error)
+type GrapevineListener interface {
+	Listen(net.IP) (int, error)
 	GetIp() net.IP
 	GetPort() int
 	SetGossip(gossip Gossip)
 }
 
-type grapevineServer struct {
+type grapevineListener struct {
 	ctx  CallCtx
 	ip   net.IP
 	port int
 	g    Gossip
 }
 
-func (g *grapevineServer) GetIp() net.IP {
+func (g *grapevineListener) GetIp() net.IP {
 	return g.ip
 }
 
-func (g *grapevineServer) GetPort() int {
+func (g *grapevineListener) GetPort() int {
 	return g.port
 }
 
-func (g *grapevineServer) SetGossip(gossip Gossip) {
+func (g *grapevineListener) SetGossip(gossip Gossip) {
 	g.g = gossip
 }
 
-func NewServer(ctx CallCtx) GrapevineServer {
-	return &grapevineServer{ctx: ctx.NewCtx("server")}
+func NewGrapevineListener(ctx CallCtx) GrapevineListener {
+	return &grapevineListener{ctx: ctx.NewCtx("server")}
 }
 
 /*
@@ -60,8 +61,8 @@ service GrapevineService {
 
 */
 
-func (g *grapevineServer) gossip(writer http.ResponseWriter, req *http.Request) {
-	log := g.ctx.NewCtx("gossip")
+func (g *grapevineListener) onGossip(writer http.ResponseWriter, req *http.Request) {
+	log := g.ctx.NewCtx("onGossip")
 
 	log.Info().Msg("\tReceive")
 
@@ -76,21 +77,26 @@ func (g *grapevineServer) gossip(writer http.ResponseWriter, req *http.Request) 
 
 	log.Info().Msgf("\tContains %v messages", len(gr.Gossip))
 
-	for _, v := range gr.Gossip {
-		s := v.GetSearch()
-		if s != nil {
-			// If we have seen this before, then we can ignore it
-			if g.g.RegisterSearchRequest(NewSearchId(s.SearchId)) {
+	for _, gg := range gr.Gossip {
+		search := gg.GetSearch()
+		if search != nil {
+
+			rumorId, err := uuid.Parse(search.SearchId)
+			if err != nil {
+				log.Warn().Err(err).Msgf("Couldn't parse: %v", search.SearchId)
 				continue
 			}
 
-			// We got a search request, make sure we add the requestor to our known list
-			ip := net.ParseIP(s.Requestor.Address.IpAddress)
-			port := s.Requestor.Address.Port
-			log.Info().Msgf("\t\tSearch from %v:%v", ip, port)
-			g.g.AddServer(services.NewServerAddress(ip, port))
+			rumor := NewSearchRumor(NewRumor(
+				rumorId,
+				gg.EndOfLife.AsTime(),
+				services.NewAccountId(search.Requestor.AccountId),
+				services.NewServerAddress(net.ParseIP(search.Requestor.Address.IpAddress), search.Requestor.Address.Port),
+			), search.Query)
 
-			// todo - If we can answer this search request, then we should respond to it
+			go g.g.AddToGossip(rumor)
+		} else {
+			log.Warn().Msgf("Unknown gossip: %v", gg)
 		}
 	}
 
@@ -105,7 +111,7 @@ func (g *grapevineServer) gossip(writer http.ResponseWriter, req *http.Request) 
 	writer.Write(body)
 }
 
-func (g *grapevineServer) isPortAvailable(ip net.IP, port int) bool {
+func (g *grapevineListener) isPortAvailable(ip net.IP, port int) bool {
 	log := g.ctx.NewCtx("isPortAvailable")
 
 	addr := net.UDPAddr{
@@ -139,13 +145,13 @@ func GetCertificatePaths() (string, string) {
 	return path.Join(certPath, "cert.pem"), path.Join(certPath, "priv.key")
 }
 
-func (g *grapevineServer) Start(ip net.IP) (int, error) {
+func (g *grapevineListener) Listen(ip net.IP) (int, error) {
 	log := g.ctx.NewCtx("Start")
 
 	g.ip = ip
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/gossip", g.gossip)
+	mux.HandleFunc("/gossip", g.onGossip)
 	// mux.HandleFunc("/data/invite", g.gossip)
 	// mux.HandleFunc("/data/change/owner", g.gossip)
 	// mux.HandleFunc("/data/change/data", g.gossip)
@@ -155,11 +161,11 @@ func (g *grapevineServer) Start(ip net.IP) (int, error) {
 
 	g.port = 8911
 
-	for g.isPortAvailable(ip, g.port) == false {
+	for !g.isPortAvailable(ip, g.port) {
 		g.port++
 	}
 
-	addr := fmt.Sprintf("%s:%d", "", g.port)
+	addr := fmt.Sprintf("%s:%d", ip, g.port)
 
 	server := http3.Server{
 		Handler:    mux,

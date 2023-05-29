@@ -20,6 +20,10 @@ type ServerAddress struct {
 	port int32
 }
 
+func (s ServerAddress) Equal(addr ServerAddress) bool {
+	return s.port == addr.port && s.ip.Equal(addr.ip)
+}
+
 func NewServerAddress(ip net.IP, port int32) ServerAddress {
 	return ServerAddress{ip, port}
 }

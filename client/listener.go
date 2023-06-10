@@ -99,8 +99,8 @@ func (g *grapevineListener) onSearchResult(writer http.ResponseWriter, req *http
 		SearchId(sr.SearchId),
 		sr.GetResponse(),
 		common.NewAccountId(sr.GetResponder().AccountId),
-		sr.GetResponder().GetAddress().IpAddress,
-		int(sr.GetResponder().GetAddress().Port))
+		sr.GetResponder().ClientAddress.IpAddress,
+		int(sr.GetResponder().ClientAddress.Port))
 }
 
 func (g *grapevineListener) onGossip(writer http.ResponseWriter, req *http.Request) {
@@ -133,22 +133,19 @@ func (g *grapevineListener) onGossip(writer http.ResponseWriter, req *http.Reque
 				rumorId,
 				gg.EndOfLife.AsTime(),
 				common.NewAccountId(search.Requestor.AccountId),
-				common.NewAddress(net.ParseIP(search.Requestor.Address.IpAddress), int(search.Requestor.Address.Port)),
+				common.NewAddress(net.ParseIP(search.Requestor.ClientAddress.IpAddress), int(search.Requestor.ClientAddress.Port)),
 			), search.Query)
 
 			if g.onSearchCb(SearchId(rumorId.String()), search.Query) {
 				// We support this type of search, invite them.
 				log.Info().Msgf("onSearchCB result . . . ")
 
-				addr := common.Address{
-					Ip:   net.ParseIP(search.Requestor.GetAddress().IpAddress),
-					Port: int(search.Requestor.GetAddress().GetPort()),
-				}
+				addr := common.NewAddressFromPB(search.Requestor.GetClientAddress())
 
 				searchResult := pb.SearchResultResponse{
-					Responder: &pb.Contact{
+					Responder: &pb.UserContact{
 						AccountId: g.accountId.String(),
-						Address: &pb.ClientAddress{
+						ClientAddress: &pb.ClientAddress{
 							IpAddress: g.ip.String(),
 							Port:      int32(g.port),
 						},

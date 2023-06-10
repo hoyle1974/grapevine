@@ -12,9 +12,11 @@ type Address struct {
 	Port int
 }
 
-type Contact struct {
-	AccountId AccountId
-	Address   Address
+func (a Address) ToPB() *pb.ClientAddress {
+	return &pb.ClientAddress{
+		IpAddress: a.Ip.String(),
+		Port:      int32(a.Port),
+	}
 }
 
 func (u Address) GetURL() string {
@@ -29,21 +31,35 @@ func (s Address) String() string {
 	return fmt.Sprintf("%s:%d", s.Ip.String(), s.Port)
 }
 
+type Contact struct {
+	AccountId AccountId
+	Address   Address
+}
+
+func (c Contact) String() string {
+	return fmt.Sprintf("%s:%s", c.AccountId, c.Address.String())
+}
+
 func NewContact(accountId AccountId, ip net.IP, port int) Contact {
 	return Contact{AccountId: accountId, Address: Address{ip, port}}
+}
+
+func NewContactFromPB(c *pb.UserContact) Contact {
+	return Contact{AccountId: NewAccountId(c.AccountId), Address: NewAddressFromPB(c.ClientAddress)}
 }
 
 func NewAddress(ip net.IP, port int) Address {
 	return Address{Ip: ip, Port: port}
 }
 
+func NewAddressFromPB(c *pb.ClientAddress) Address {
+	return NewAddress(net.ParseIP(c.IpAddress), int(c.Port))
+}
+
 func (c Contact) ToPB() *pb.UserContact {
 	return &pb.UserContact{
-		UserId: c.AccountId.String(),
-		ClientAddress: &pb.ClientAddress{
-			IpAddress: c.Address.Ip.String(),
-			Port:      int32(c.Address.Port),
-		},
+		AccountId:     c.AccountId.String(),
+		ClientAddress: c.Address.ToPB(),
 	}
 }
 

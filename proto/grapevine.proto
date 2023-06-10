@@ -6,29 +6,23 @@ import "proto/common.proto";
 package proto;
 option go_package = "github.com/hoyle1974/grapevine/proto";
 
-// Represents a Contact lookup by accountId
-message Contact {
-  string accountId = 1;
-  ClientAddress address = 3; 
-}
-
 // A gossip message used to search for something, if found the result
 // should be returned to the requester via a SearchResult call
 message Search {
   string search_id = 1;
-  Contact requestor = 2;
+  UserContact requestor = 2;
   string query = 3;
 }   
 
 message SearchResultRequest {
   string search_id = 1;
-  Contact responder = 2;
+  UserContact responder = 2;
   string response = 3;
 }
 
 message SearchResultResponse {
   string search_id = 1;
-  Contact responder = 2;
+  UserContact responder = 2;
   string response = 3;
 }
 
@@ -86,7 +80,7 @@ service GrapevineService {
 
 message SharedDataInvite {
   string sharedDataId  = 1;
-  Contact creator = 2;
+  UserContact creator = 2;
 }
 
 message SharedDataInviteResponse {
@@ -94,7 +88,7 @@ message SharedDataInviteResponse {
 
 message ShareDataSetValue {
   string sharedDataId = 1;
-  Contact originator = 2;
+  UserContact originator = 2;
   string key = 3;
   string value = 4;
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"net"
 	"sync"
 	"time"
 
@@ -43,7 +42,7 @@ func (g *gossip) AddServer(addr common.Address) {
 }
 
 func (g *gossip) AddToGossip(rumor Rumor) {
-	g.mongers.AddMonger(rumor.GetCreatorAddress())
+	g.mongers.AddMonger(rumor.GetCreator().Address)
 
 	g.rumors.AddRumor(rumor)
 }
@@ -115,8 +114,8 @@ func (g *gossip) GossipLoop(clientCache GrapevineClientCache) {
 						rumorId,
 						gossip.EndOfLife.AsTime(),
 						common.NewAccountId(search.Requestor.AccountId),
-						common.NewAddress(net.ParseIP(search.Requestor.Address.IpAddress), int(search.Requestor.Address.Port)),
-					), search.Query)
+						common.NewAddressFromPB(search.Requestor.ClientAddress)),
+						search.Query)
 
 					go g.AddToGossip(rumor)
 				}

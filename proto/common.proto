@@ -13,6 +13,6 @@ message ClientAddress {
 }
 
 message UserContact {
-  string user_id = 1;
+  string account_id = 1;
   ClientAddress client_address = 2;
 }

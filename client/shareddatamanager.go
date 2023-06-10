@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	protoc "github.com/golang/protobuf/proto"
+	"github.com/hoyle1974/grapevine/common"
 	pb "github.com/hoyle1974/grapevine/proto"
-	"github.com/hoyle1974/grapevine/services"
 	"github.com/rs/zerolog/log"
 )
 
@@ -16,7 +16,7 @@ type SharedDataManager interface {
 	Serve(s SharedData)
 	JoinShare(s SharedData)
 	LeaveShare(s SharedData)
-	Invite(s SharedData, recipient services.UserContact, as string) bool
+	Invite(s SharedData, recipient common.Contact, as string) bool
 }
 
 type sharedDataManager struct {
@@ -41,7 +41,7 @@ func (sdm *sharedDataManager) JoinShare(s SharedData) {
 	sdm.lock.Lock()
 	defer sdm.lock.Unlock()
 
-	todo
+	// @TODO
 
 }
 
@@ -49,30 +49,30 @@ func (sdm *sharedDataManager) LeaveShare(s SharedData) {
 	sdm.lock.Lock()
 	defer sdm.lock.Unlock()
 
-	todo
+	// @TODO
 
 }
 
-func (sdm *sharedDataManager) Invite(s SharedData, recipient services.UserContact, as string) bool {
+func (sdm *sharedDataManager) Invite(s SharedData, recipient common.Contact, as string) bool {
 	sdm.lock.Lock()
 	defer sdm.lock.Unlock()
 
 	// Tell the contact about this shared data, inviting them to it
 
-	client := sdm.clientCache.GetClient(recipient).GetClient()
+	client := sdm.clientCache.GetClient(recipient.Address).GetClient()
 
 	invite := pb.SharedDataInvite{
 		SharedDataId: string(s.GetId()),
 		Creator:      s.GetCreator().ToPB(),
 	}
 
-	b, err := protoc.Marshal(invite)
+	b, err := protoc.Marshal(&invite)
 	if err != nil {
 		log.Error().Err(err).Msg("Can't unmarshal")
 		return false
 	}
 
-	resp, err := client.Post(fmt.Sprintf("https://%s/shareddata", recipient.GetURL()), "grpc-message-type", bytes.NewReader(b))
+	resp, err := client.Post(fmt.Sprintf("https://%s/shareddata", recipient.Address.GetURL()), "grpc-message-type", bytes.NewReader(b))
 	if err != nil {
 		log.Error().Err(err).Msg("\tTried to post but got error")
 		return false
@@ -80,7 +80,7 @@ func (sdm *sharedDataManager) Invite(s SharedData, recipient services.UserContac
 		log.Info().Msgf("\tResponse: %v", resp.StatusCode)
 	}
 
-	b, err := io.ReadAll(resp.Body)
+	b, err = io.ReadAll(resp.Body)
 	if err != nil {
 		log.Error().Err(err).Msg("\tError reading body of response")
 		return false

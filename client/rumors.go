@@ -14,26 +14,23 @@ import (
 type Rumor interface {
 	GetRumorId() uuid.UUID
 	GetExpiry() time.Time
-	GetCreatorAccountId() common.AccountId
-	GetCreatorAddress() common.Address
+	GetCreator() common.Contact
 	IsExpired() bool
 	ToProtobuf() *proto.Gossip
 	String() string
 }
 
 type rumor struct {
-	rumorId          uuid.UUID
-	expiry           time.Time
-	creatorAccountId common.AccountId
-	creatorAddr      common.Address
+	rumorId uuid.UUID
+	expiry  time.Time
+	creator common.Contact
 }
 
 func NewRumor(rumorId uuid.UUID, expiry time.Time, creatorAccountId common.AccountId, creatorAddr common.Address) rumor {
 	return rumor{
-		rumorId:          rumorId,
-		expiry:           expiry,
-		creatorAccountId: creatorAccountId,
-		creatorAddr:      creatorAddr,
+		rumorId: rumorId,
+		expiry:  expiry,
+		creator: common.NewContact(creatorAccountId, creatorAddr.Ip, creatorAddr.Port),
 	}
 }
 
@@ -41,8 +38,7 @@ func (r rumor) String() string {
 	return fmt.Sprintf("Id(%v) Expired(%v) Creator(%v,%v)",
 		r.rumorId.String(),
 		r.expiry.String(),
-		r.creatorAccountId.String(),
-		r.creatorAddr.String(),
+		r.creator.String(),
 	)
 }
 
@@ -54,12 +50,8 @@ func (r rumor) GetExpiry() time.Time {
 	return r.expiry
 }
 
-func (r rumor) GetCreatorAccountId() common.AccountId {
-	return r.creatorAccountId
-}
-
-func (r rumor) GetCreatorAddress() common.Address {
-	return r.creatorAddr
+func (r rumor) GetCreator() common.Contact {
+	return r.creator
 }
 
 func (r rumor) IsExpired() bool {
@@ -88,15 +80,9 @@ func (r SearchRumor) GetQuery() string {
 
 func (r SearchRumor) ToProtobuf() *proto.Gossip {
 	search := &proto.Search{
-		SearchId: r.rumorId.String(),
-		Query:    r.query,
-		Requestor: &proto.Contact{
-			AccountId: string(r.creatorAccountId.String()),
-			Address: &proto.ClientAddress{
-				IpAddress: r.creatorAddr.Ip.String(),
-				Port:      int32(r.creatorAddr.Port),
-			},
-		},
+		SearchId:  r.rumorId.String(),
+		Query:     r.query,
+		Requestor: r.creator.ToPB(),
 	}
 
 	return &proto.Gossip{

@@ -1,5 +1,7 @@
 all:
-	@echo done
+	@echo "make deploy - Deploys services to local cluster"
+	@echo "make tictactoe - Deploys example app to local cluster"
+	@echo "make protos - Rebuilds protobufs"
 
 cluster:
 	-k3d cluster delete grapevine

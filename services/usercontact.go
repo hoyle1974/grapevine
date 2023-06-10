@@ -1,25 +1,19 @@
 package services
 
 import (
-	"fmt"
 	"net"
 	"time"
 
+	"github.com/hoyle1974/grapevine/common"
 	"github.com/lib/pq"
 )
 
 type userContact struct {
-	AccountID AccountId
-	Ip        net.IP
-	Port      int32
-	Time      time.Time
+	common.Contact
+	Time time.Time
 }
 
-func (u userContact) GetURL() string {
-	return fmt.Sprintf("%s:%d", u.Ip.String(), u.Port)
-}
-
-func UpdateUserContact(appCtx AppCtx, accountId AccountId, ip net.IP, port int32) error {
+func UpdateUserContact(appCtx AppCtx, accountId common.AccountId, ip net.IP, port int32) error {
 	log := appCtx.Log("UpdateUserContact")
 	log.Printf("Received: %v/%v/%v", accountId, ip, port)
 
@@ -37,12 +31,12 @@ func UpdateUserContact(appCtx AppCtx, accountId AccountId, ip net.IP, port int32
 	return nil
 }
 
-func GetUserContacts(appCtx AppCtx, accountIDs []AccountId) ([]userContact, error) {
+func GetUserContacts(appCtx AppCtx, accountIDs []common.AccountId) ([]common.Contact, error) {
 	log := appCtx.Log("GetUserContacts")
 	log.Printf("Received: %v", accountIDs)
 
 	//::uuid[]
-	stmt := `select id, ip, port, timestamp from "user_contacts" where id = any($1::uuid[])`
+	stmt := `select id, ip, port from "user_contacts" where id = any($1::uuid[])`
 
 	params := make([]string, len(accountIDs))
 	for idx, accountId := range accountIDs {
@@ -51,24 +45,18 @@ func GetUserContacts(appCtx AppCtx, accountIDs []AccountId) ([]userContact, erro
 
 	rows, err := appCtx.db.Query(stmt, pq.Array(params))
 	if err != nil {
-		return []userContact{}, err
+		return []common.Contact{}, err
 	}
 
-	contacts := make([]userContact, 0)
+	contacts := make([]common.Contact, 0)
 	defer rows.Close()
 	for rows.Next() {
 		var id string
 		var ip string
-		var port int32
-		var timestamp time.Time
+		var port int
 
-		rows.Scan(&id, &ip, &port, &timestamp)
-		contacts = append(contacts, userContact{
-			AccountID: NewAccountId(id),
-			Ip:        net.ParseIP(ip),
-			Port:      port,
-			Time:      timestamp,
-		})
+		rows.Scan(&id, &ip, &port)
+		contacts = append(contacts, common.NewContact(common.NewAccountId(id), net.ParseIP(ip), port))
 	}
 
 	return contacts, nil

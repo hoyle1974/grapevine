@@ -18,7 +18,7 @@ import (
 	"runtime/debug"
 
 	"github.com/hoyle1974/grapevine/client"
-	"github.com/hoyle1974/grapevine/services"
+	"github.com/hoyle1974/grapevine/common"
 	"github.com/rs/zerolog"
 )
 
@@ -64,7 +64,7 @@ func (c *Callback) OnSearch(id client.SearchId, query string) bool {
 }
 
 // We found someone matching our game type search
-func (c *Callback) OnSearchResult(id client.SearchId, query string, contact services.UserContact) {
+func (c *Callback) OnSearchResult(id client.SearchId, query string, contact common.Contact) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if !c.searching {
@@ -89,7 +89,7 @@ func (c *Callback) OnSearchResult(id client.SearchId, query string, contact serv
 }
 
 // Someone has invited us to share data (in our case it's a game
-func (c *Callback) OnInvited(sharedData client.SharedData, me string, contact services.UserContact) {
+func (c *Callback) OnInvited(sharedData client.SharedData, me string, contact common.Contact) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
@@ -108,7 +108,7 @@ func (c *Callback) OnInvited(sharedData client.SharedData, me string, contact se
 }
 
 // Someone accepted our invitation to share the data
-func (c *Callback) OnInviteAccepted(sharedData client.SharedData, contact services.UserContact) {
+func (c *Callback) OnInviteAccepted(sharedData client.SharedData, contact common.Contact) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if sharedData.GetId() != c.sharedData.GetId() {
@@ -117,7 +117,7 @@ func (c *Callback) OnInviteAccepted(sharedData client.SharedData, contact servic
 	}
 
 	// Let's start the game
-	fmt.Printf("Player %v has joined", contact.AccountID)
+	fmt.Printf("Player %v has joined", contact.AccountId)
 	c.sharedData.Set("state", "player1")
 
 	c.play()

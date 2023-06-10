@@ -1,8 +1,8 @@
 package services
 
-import "github.com/hoyle1974/grapevine/models"
+import "github.com/hoyle1974/grapevine/common"
 
-func CreateAccount(app AppCtx, username string, password string) (models.AccountId, error) {
+func CreateAccount(app AppCtx, username string, password string) (common.AccountId, error) {
 	log := app.Log("CreateAccount")
 	log.Printf("Received: %v/****", username)
 
@@ -20,5 +20,5 @@ func CreateAccount(app AppCtx, username string, password string) (models.Account
 	var id string
 	row.Scan(&id)
 
-	return models.NewAccountId(id), nil
+	return common.NewAccountId(id), nil
 }

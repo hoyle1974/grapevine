@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/hoyle1974/grapevine/common"
 	"github.com/hoyle1974/grapevine/microservice"
 	pb "github.com/hoyle1974/grapevine/proto"
 	"github.com/hoyle1974/grapevine/services"
@@ -28,7 +29,7 @@ func PBSocialListTypeToSocialListType(s pb.SocialListType) services.SocialListTy
 func (s *server) GetSocialList(ctx context.Context, in *pb.GetSocialListRequest) (*pb.GetSocialListResponse, error) {
 	items, err := services.GetSocialList(
 		s.appCtx,
-		services.NewAccountId(in.GetUserId()),
+		common.NewAccountId(in.GetUserId()),
 		PBSocialListTypeToSocialListType(in.GetListType()),
 	)
 	if err != nil {
@@ -47,9 +48,9 @@ func (s *server) AddToSocialList(ctx context.Context, in *pb.AddToSocialListRequ
 
 	err := services.AddToSocialList(
 		s.appCtx,
-		services.NewAccountId(in.UserId),
+		common.NewAccountId(in.UserId),
 		PBSocialListTypeToSocialListType(in.SocialListType),
-		services.NewAccountId(in.IdToAdd),
+		common.NewAccountId(in.IdToAdd),
 	)
 	if err != nil {
 		return &pb.AddToSocialListResponse{Error: microservice.ErrToProto(err)}, err
@@ -61,9 +62,9 @@ func (s *server) AddToSocialList(ctx context.Context, in *pb.AddToSocialListRequ
 func (s *server) RemoveFromSocialList(ctx context.Context, in *pb.RemoveFromSocialListRequest) (*pb.RemoveFromSocialListResponse, error) {
 	err := services.RemoveFromSocialList(
 		s.appCtx,
-		services.NewAccountId(in.UserId),
+		common.NewAccountId(in.UserId),
 		in.GetSocialListType().String(),
-		services.NewAccountId(in.IdToRemove),
+		common.NewAccountId(in.IdToRemove),
 	)
 	if err != nil {
 		return &pb.RemoveFromSocialListResponse{Error: microservice.ErrToProto(err)}, err

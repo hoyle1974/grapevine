@@ -6,16 +6,16 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hoyle1974/grapevine/common"
 	"github.com/hoyle1974/grapevine/proto"
-	"github.com/hoyle1974/grapevine/services"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type Rumor interface {
 	GetRumorId() uuid.UUID
 	GetExpiry() time.Time
-	GetCreatorAccountId() services.AccountId
-	GetCreatorAddress() services.ServerAddress
+	GetCreatorAccountId() common.AccountId
+	GetCreatorAddress() common.Address
 	IsExpired() bool
 	ToProtobuf() *proto.Gossip
 	String() string
@@ -24,11 +24,11 @@ type Rumor interface {
 type rumor struct {
 	rumorId          uuid.UUID
 	expiry           time.Time
-	creatorAccountId services.AccountId
-	creatorAddr      services.ServerAddress
+	creatorAccountId common.AccountId
+	creatorAddr      common.Address
 }
 
-func NewRumor(rumorId uuid.UUID, expiry time.Time, creatorAccountId services.AccountId, creatorAddr services.ServerAddress) rumor {
+func NewRumor(rumorId uuid.UUID, expiry time.Time, creatorAccountId common.AccountId, creatorAddr common.Address) rumor {
 	return rumor{
 		rumorId:          rumorId,
 		expiry:           expiry,
@@ -54,11 +54,11 @@ func (r rumor) GetExpiry() time.Time {
 	return r.expiry
 }
 
-func (r rumor) GetCreatorAccountId() services.AccountId {
+func (r rumor) GetCreatorAccountId() common.AccountId {
 	return r.creatorAccountId
 }
 
-func (r rumor) GetCreatorAddress() services.ServerAddress {
+func (r rumor) GetCreatorAddress() common.Address {
 	return r.creatorAddr
 }
 
@@ -93,8 +93,8 @@ func (r SearchRumor) ToProtobuf() *proto.Gossip {
 		Requestor: &proto.Contact{
 			AccountId: string(r.creatorAccountId.String()),
 			Address: &proto.ClientAddress{
-				IpAddress: r.creatorAddr.GetIp().String(),
-				Port:      int32(r.creatorAddr.GetPort()),
+				IpAddress: r.creatorAddr.Ip.String(),
+				Port:      int32(r.creatorAddr.Port),
 			},
 		},
 	}

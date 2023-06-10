@@ -1,6 +1,8 @@
 package client
 
-import "github.com/hoyle1974/grapevine/services"
+import (
+	"github.com/hoyle1974/grapevine/common"
+)
 
 type SearchId string
 type SharedDataId string
@@ -15,13 +17,13 @@ func (s SearchId) String() string {
 
 type ClientCallback interface {
 	OnSearch(id SearchId, query string) bool
-	OnSearchResult(id SearchId, result string, contact services.UserContact)
-	OnInvited(sharedData SharedData, me string, contact services.UserContact)
-	OnInviteAccepted(sharedData SharedData, contact services.UserContact)
+	OnSearchResult(id SearchId, result string, contact common.Contact)
+	OnInvited(sharedData SharedData, me string, contact common.Contact)
+	OnInviteAccepted(sharedData SharedData, contact common.Contact)
 }
 
 type SharedData interface {
-	GetCreator() services.AccountId
+	GetCreator() common.Contact
 	GetId() SharedDataId
 	Create(key string, value interface{}, owner string, visibility string)
 	Get(key string) interface{}
@@ -42,18 +44,18 @@ type data struct {
 }
 
 type sharedData struct {
-	creator services.AccountId
+	creator common.Contact
 	id      SharedDataId
 	me      string
 	data    map[string]data
 	cb      func(key string)
 }
 
-func NewSharedData(creator services.AccountId) SharedData {
+func NewSharedData(creator common.Contact) SharedData {
 	return &sharedData{creator: creator}
 }
 
-func (s *sharedData) GetCreator() services.AccountId {
+func (s *sharedData) GetCreator() common.Contact {
 	return s.creator
 }
 

@@ -1,6 +1,10 @@
 package services
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/hoyle1974/grapevine/common"
+)
 
 type SocialListType string
 
@@ -10,7 +14,7 @@ const (
 	SocialListType_FOLLOWING SocialListType = "FOLLOWING"
 )
 
-func GetSocialList(appCtx AppCtx, owner AccountId, listType SocialListType) ([]AccountId, error) {
+func GetSocialList(appCtx AppCtx, owner common.AccountId, listType SocialListType) ([]common.AccountId, error) {
 	log := appCtx.Log("GetSocialList")
 	log.Printf("Received: %v", owner)
 
@@ -21,21 +25,21 @@ func GetSocialList(appCtx AppCtx, owner AccountId, listType SocialListType) ([]A
 	}
 	rows, err := appCtx.db.Query(stmt, owner.String(), listType)
 	if err != nil {
-		return []AccountId{}, err
+		return []common.AccountId{}, err
 	}
 
-	entities := make([]AccountId, 0)
+	entities := make([]common.AccountId, 0)
 	defer rows.Close()
 	for rows.Next() {
 		var entity_id string
 		rows.Scan(&entity_id)
-		entities = append(entities, NewAccountId(entity_id))
+		entities = append(entities, common.NewAccountId(entity_id))
 	}
 
 	return entities, nil
 }
 
-func AddToSocialList(appCtx AppCtx, owner AccountId, listType SocialListType, idToAdd AccountId) error {
+func AddToSocialList(appCtx AppCtx, owner common.AccountId, listType SocialListType, idToAdd common.AccountId) error {
 	log := appCtx.Log("AddToSocialList")
 	log.Printf("Received: %v/%v/%v", owner, listType, idToAdd)
 	if listType == SocialListType_FOLLOWING {
@@ -51,7 +55,7 @@ func AddToSocialList(appCtx AppCtx, owner AccountId, listType SocialListType, id
 	return nil
 }
 
-func RemoveFromSocialList(appCtx AppCtx, owner AccountId, listType string, idToRemove AccountId) error {
+func RemoveFromSocialList(appCtx AppCtx, owner common.AccountId, listType string, idToRemove common.AccountId) error {
 	log := appCtx.Log("RemoveFromSocialList")
 	log.Printf("Received: %v/%v/%v", owner, listType, idToRemove)
 

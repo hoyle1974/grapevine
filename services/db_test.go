@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hoyle1974/grapevine/common"
 	_ "github.com/lib/pq"
 	"github.com/rs/zerolog/log"
 )
@@ -32,7 +33,7 @@ func NewTestAppCtx() AppCtx {
 		initDB()
 	}
 
-	return NewAppCtx(l, nil, db, NewServerAddress(net.ParseIP("127.0.0.1"), 8911))
+	return NewAppCtx(l, nil, db, common.NewAddress(net.ParseIP("127.0.0.1"), 8911))
 }
 
 func initDB() {

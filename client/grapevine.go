@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hoyle1974/grapevine/common"
 	"github.com/hoyle1974/grapevine/proto"
-	"github.com/hoyle1974/grapevine/services"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -20,11 +20,11 @@ type Grapevine interface {
 	Serve(s SharedData)
 	JoinShare(s SharedData)
 	LeaveShare(s SharedData)
-	Invite(s SharedData, recipient services.UserContact, as string) bool
+	Invite(s SharedData, recipient common.Contact, as string) bool
 	Search(key string) SearchId
 
 	CreateAccount(username string, password string) error
-	Login(username string, password string, ip net.IP, port int) (services.AccountId, error)
+	Login(username string, password string, ip net.IP, port int) (common.AccountId, error)
 }
 
 type grapevine struct {
@@ -33,7 +33,7 @@ type grapevine struct {
 	cb                ClientCallback
 	listener          GrapevineListener
 	clientCache       GrapevineClientCache
-	accountId         services.AccountId
+	accountId         common.AccountId
 	gossip            Gossip
 	sharedDataManager SharedDataManager
 }
@@ -54,8 +54,8 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 	onSearchCB := func(searchId SearchId, query string) bool {
 		return g.cb.OnSearch(searchId, query)
 	}
-	onSearchResultCB := func(searchId SearchId, response string, accountId services.AccountId, ip string, port int32) {
-		g.cb.OnSearchResult(searchId, response, services.UserContact{AccountID: accountId, Ip: net.ParseIP(ip), Port: port})
+	onSearchResultCB := func(searchId SearchId, response string, accountId common.AccountId, ip string, port int) {
+		g.cb.OnSearchResult(searchId, response, common.NewContact(accountId, net.ParseIP(ip), port))
 	}
 	g.listener = NewGrapevineListener(ctx, onSearchCB, onSearchResultCB)
 	port, err := g.listener.Listen(ip)
@@ -70,12 +70,12 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 
 	g.sharedDataManager = NewSharedDataManager(g.clientCache)
 
-	g.gossip = NewGossip(ctx, services.NewServerAddress(ip, int32(port)))
+	g.gossip = NewGossip(ctx, common.NewAddress(ip, port))
 	go g.gossip.GossipLoop(g.clientCache)
 	g.listener.SetGossip(g.gossip)
 
 	ctx.Info().Msgf("Adding server %v", ip)
-	g.gossip.AddServer(services.NewServerAddress(ip, 8911))
+	g.gossip.AddServer(common.NewAddress(ip, 8911))
 
 	// addrs, err := net.LookupHost(*gossipAddr)
 	// if err == nil {
@@ -116,13 +116,13 @@ func (g *grapevine) CreateAccount(username string, password string) error {
 	return nil
 }
 
-func (g *grapevine) Login(username string, password string, ip net.IP, port int) (services.AccountId, error) {
+func (g *grapevine) Login(username string, password string, ip net.IP, port int) (common.AccountId, error) {
 	log := g.ctx.NewCtx("Login")
 
 	log.Info().Msg("Login: " + *authURL)
 	conn, err := grpc.Dial(*authURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return services.NilAccountId(), err
+		return common.NilAccountId(), err
 	}
 	defer conn.Close()
 
@@ -134,10 +134,10 @@ func (g *grapevine) Login(username string, password string, ip net.IP, port int)
 		ClientAddress: &proto.ClientAddress{IpAddress: ip.String(), Port: int32(port)},
 	})
 	if err != nil {
-		return services.NilAccountId(), err
+		return common.NilAccountId(), err
 	}
 
-	g.accountId = services.NewAccountId(resp.GetUserId())
+	g.accountId = common.NewAccountId(resp.GetUserId())
 	g.listener.SetAccountId(g.accountId)
 	return g.accountId, nil
 }
@@ -159,7 +159,7 @@ func (g *grapevine) LeaveShare(s SharedData) {
 	g.sharedDataManager.LeaveShare(s)
 }
 
-func (g *grapevine) Invite(s SharedData, recipient services.UserContact, as string) bool {
+func (g *grapevine) Invite(s SharedData, recipient common.Contact, as string) bool {
 	// Invite someone to our shared data
 	return g.sharedDataManager.Invite(s, recipient, as)
 }
@@ -175,7 +175,7 @@ func (g *grapevine) Search(query string) SearchId {
 		uuid.New(),
 		time.Now().Add(time.Minute),
 		g.accountId,
-		services.NewServerAddress(g.listener.GetIp(), int32(g.listener.GetPort())),
+		common.NewAddress(g.listener.GetIp(), g.listener.GetPort()),
 	), query)
 
 	g.gossip.AddToGossip(rumor)

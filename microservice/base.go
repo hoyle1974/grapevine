@@ -8,6 +8,7 @@ import (
 	grpczerolog "github.com/grpc-ecosystem/go-grpc-middleware/providers/zerolog/v2"
 	middleware "github.com/grpc-ecosystem/go-grpc-middleware/v2"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/hoyle1974/grapevine/common"
 	pb "github.com/hoyle1974/grapevine/proto"
 	"github.com/hoyle1974/grapevine/services"
 	"github.com/rs/zerolog"
@@ -38,7 +39,7 @@ func Start(name string, register func(appCtx services.AppCtx)) {
 	l.Info().Msg("Starting " + name + " microservice")
 
 	flag.Parse()
-	addr := services.NewServerAddress(net.ParseIP(*ip), int32(*port))
+	addr := common.NewAddress(net.ParseIP(*ip), *port)
 	lis, err := net.Listen("tcp", addr.String())
 	if err != nil {
 		log.Fatal().AnErr("error", err).Msg("failed to listen")

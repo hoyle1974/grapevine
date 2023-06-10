@@ -10,26 +10,26 @@ import (
 
 	protoc "github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
+	"github.com/hoyle1974/grapevine/common"
 	"github.com/hoyle1974/grapevine/proto"
-	"github.com/hoyle1974/grapevine/services"
 )
 
 type Gossip interface {
 	AddToGossip(rumor Rumor)
 	GossipLoop(clientCache GrapevineClientCache)
-	AddServer(contact services.ServerAddress)
+	AddServer(addr common.Address)
 }
 
 type gossip struct {
 	lock          sync.Mutex
 	ctx           CallCtx
-	self          services.ServerAddress
+	self          common.Address
 	rumors        Rumors
 	mongers       GossipMongers
 	knownSearches map[string]bool
 }
 
-func NewGossip(ctx CallCtx, self services.ServerAddress) Gossip {
+func NewGossip(ctx CallCtx, self common.Address) Gossip {
 	return &gossip{
 		self:    self,
 		ctx:     ctx.NewCtx("gossip"),
@@ -38,7 +38,7 @@ func NewGossip(ctx CallCtx, self services.ServerAddress) Gossip {
 	}
 }
 
-func (g *gossip) AddServer(addr services.ServerAddress) {
+func (g *gossip) AddServer(addr common.Address) {
 	g.mongers.AddMonger(addr)
 }
 
@@ -80,14 +80,9 @@ func (g *gossip) GossipLoop(clientCache GrapevineClientCache) {
 		} else {
 			log.Info().Msgf("Sending . . . ")
 
-			contact := services.UserContact{
-				Ip:   addr.GetIp(),
-				Port: addr.GetPort(),
-			}
-
-			log.Info().Msgf("\tGossiping to %v:%v", contact.Ip, contact.Port)
-			client := clientCache.GetClient(contact).GetClient()
-			resp, err := client.Post(fmt.Sprintf("https://%s/gossip", contact.GetURL()), "grpc-message-type", bytes.NewReader(b))
+			log.Info().Msgf("\tGossiping to %v:%v", addr.Ip, addr.Port)
+			client := clientCache.GetClient(*addr).GetClient()
+			resp, err := client.Post(fmt.Sprintf("https://%s/gossip", addr.GetURL()), "grpc-message-type", bytes.NewReader(b))
 			if err != nil {
 				log.Error().Err(err).Msg("\tTried to post but got error")
 				g.mongers.RemoveMonger(*addr)
@@ -119,8 +114,8 @@ func (g *gossip) GossipLoop(clientCache GrapevineClientCache) {
 					rumor := NewSearchRumor(NewRumor(
 						rumorId,
 						gossip.EndOfLife.AsTime(),
-						services.NewAccountId(search.Requestor.AccountId),
-						services.NewServerAddress(net.ParseIP(search.Requestor.Address.IpAddress), search.Requestor.Address.Port),
+						common.NewAccountId(search.Requestor.AccountId),
+						common.NewAddress(net.ParseIP(search.Requestor.Address.IpAddress), int(search.Requestor.Address.Port)),
 					), search.Query)
 
 					go g.AddToGossip(rumor)

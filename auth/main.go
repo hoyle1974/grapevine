@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 
+	"github.com/hoyle1974/grapevine/common"
 	"github.com/hoyle1974/grapevine/microservice"
 	pb "github.com/hoyle1974/grapevine/proto"
 	"github.com/hoyle1974/grapevine/services"
@@ -14,21 +15,21 @@ type server struct {
 	appCtx services.AppCtx
 }
 
-func UserContactsToPB(contacts []services.UserContact) []*pb.UserContact {
-	out := make([]*pb.UserContact, len(contacts))
-	for _, contact := range contacts {
-		c := pb.UserContact{
-			UserId: contact.AccountID.String(),
-			ClientAddress: &pb.ClientAddress{
-				IpAddress: contact.Ip.String(),
-				Port:      contact.Port,
-			},
-		}
-		out = append(out, &c)
-	}
+// func UserContactsToPB(contacts []services.UserContact) []*pb.UserContact {
+// 	out := make([]*pb.UserContact, len(contacts))
+// 	for _, contact := range contacts {
+// 		c := pb.UserContact{
+// 			UserId: contact.AccountID.String(),
+// 			ClientAddress: &pb.ClientAddress{
+// 				IpAddress: contact.Ip.String(),
+// 				Port:      contact.Port,
+// 			},
+// 		}
+// 		out = append(out, &c)
+// 	}
 
-	return out
-}
+// 	return out
+// }
 
 func (s *server) Auth(ctx context.Context, in *pb.AuthRequest) (*pb.AuthResponse, error) {
 
@@ -68,9 +69,9 @@ func (s *server) Auth(ctx context.Context, in *pb.AuthRequest) (*pb.AuthResponse
 	return &pb.AuthResponse{
 		Message:   "Hello " + in.GetUsername(),
 		UserId:    accountId.String(),
-		Blocked:   services.AccountIdsToStrings(blockedIds),
-		Follows:   UserContactsToPB(follows),
-		Following: UserContactsToPB(following),
+		Blocked:   common.AccountIdsToStrings(blockedIds),
+		Follows:   common.ContactsToPB(follows),
+		Following: common.ContactsToPB(following),
 	}, nil
 
 }

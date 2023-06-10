@@ -5,32 +5,32 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hoyle1974/grapevine/services"
+	"github.com/hoyle1974/grapevine/common"
 )
 
 type GossipMongers interface {
-	AddMonger(addr services.ServerAddress)
-	RemoveMonger(addr services.ServerAddress)
-	GetRandomServerAddress() *services.ServerAddress
+	AddMonger(addr common.Address)
+	RemoveMonger(addr common.Address)
+	GetRandomServerAddress() *common.Address
 }
 
 type monger struct {
 	expiry        time.Time
-	serverAddress services.ServerAddress
+	serverAddress common.Address
 }
 
 type gossipMongers struct {
 	lock    sync.RWMutex
 	ctx     CallCtx
 	mongers []monger
-	self    services.ServerAddress
+	self    common.Address
 }
 
-func NewGossipMongers(ctx CallCtx, self services.ServerAddress) GossipMongers {
+func NewGossipMongers(ctx CallCtx, self common.Address) GossipMongers {
 	return &gossipMongers{ctx: ctx, mongers: []monger{}, self: self}
 }
 
-func (g *gossipMongers) RemoveMonger(addr services.ServerAddress) {
+func (g *gossipMongers) RemoveMonger(addr common.Address) {
 	// log := g.ctx.NewCtx("RemoveMonger")
 	if g.self.Equal(addr) {
 		// log.Info().Msg("Not adding ourself")
@@ -49,7 +49,7 @@ func (g *gossipMongers) RemoveMonger(addr services.ServerAddress) {
 
 }
 
-func (g *gossipMongers) AddMonger(addr services.ServerAddress) {
+func (g *gossipMongers) AddMonger(addr common.Address) {
 	log := g.ctx.NewCtx("AddMonger")
 	if g.self.Equal(addr) {
 		// log.Info().Msg("Not adding ourself")
@@ -78,7 +78,7 @@ func (g *gossipMongers) AddMonger(addr services.ServerAddress) {
 	g.lock.Unlock()
 }
 
-func (g *gossipMongers) GetRandomServerAddress() *services.ServerAddress {
+func (g *gossipMongers) GetRandomServerAddress() *common.Address {
 	log := g.ctx.NewCtx("GetRandomServerAddress")
 
 	g.lock.RLock()
@@ -90,8 +90,5 @@ func (g *gossipMongers) GetRandomServerAddress() *services.ServerAddress {
 		return nil
 	}
 
-	addr := g.mongers[rand.Intn(len(g.mongers))].serverAddress
-	// log.Debug().Msgf("Returning %v", addr)
-
-	return &addr
+	return &g.mongers[rand.Intn(len(g.mongers))].serverAddress
 }

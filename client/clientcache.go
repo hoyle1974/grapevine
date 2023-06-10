@@ -8,13 +8,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hoyle1974/grapevine/services"
+	"github.com/hoyle1974/grapevine/common"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
 )
 
 type GrapevineClientCache interface {
-	GetClient(services.UserContact) GrapevineClient
+	GetClient(common.Address) GrapevineClient
 }
 
 type grapevineClientCache struct {
@@ -33,7 +33,7 @@ type GrapevineClient interface {
 }
 
 type grapevineClient struct {
-	contact      services.UserContact
+	addr         common.Address
 	expiry       time.Time
 	roundTripper *http3.RoundTripper
 	httpClient   *http.Client
@@ -56,12 +56,12 @@ func (g *grapevineClientCache) cleanupConnections() {
 	}
 }
 
-func (g *grapevineClientCache) GetClient(contact services.UserContact) GrapevineClient {
+func (g *grapevineClientCache) GetClient(addr common.Address) GrapevineClient {
 	g.lock.Lock()
 	defer g.cleanupConnections()
 	defer g.lock.Unlock()
 
-	key := contact.GetURL()
+	key := addr.GetURL()
 
 	client, found := g.clients[key]
 	if found {
@@ -70,7 +70,7 @@ func (g *grapevineClientCache) GetClient(contact services.UserContact) Grapevine
 
 	}
 
-	client = &grapevineClient{contact: contact, expiry: time.Now().Add(time.Minute)}
+	client = &grapevineClient{addr: addr, expiry: time.Now().Add(time.Minute)}
 	g.clients[key] = client
 
 	pool, err := x509.SystemCertPool()

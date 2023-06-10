@@ -12,8 +12,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	protoc "github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
+	"github.com/hoyle1974/grapevine/common"
 	pb "github.com/hoyle1974/grapevine/proto"
-	"github.com/hoyle1974/grapevine/services"
 
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
@@ -25,18 +25,18 @@ type GrapevineListener interface {
 	GetPort() int
 	SetGossip(gossip Gossip)
 	SetClientCache(clientCache GrapevineClientCache)
-	SetAccountId(accountId services.AccountId)
+	SetAccountId(accountId common.AccountId)
 }
 
 type grapevineListener struct {
 	ctx              CallCtx
-	accountId        services.AccountId
+	accountId        common.AccountId
 	ip               net.IP
 	port             int
 	g                Gossip
 	clientCache      GrapevineClientCache
 	onSearchCb       func(searchId SearchId, query string) bool
-	onSearchResultCb func(searchId SearchId, response string, accountId services.AccountId, ip string, port int32)
+	onSearchResultCb func(searchId SearchId, response string, accountId common.AccountId, ip string, port int)
 }
 
 func (g *grapevineListener) GetIp() net.IP {
@@ -55,13 +55,13 @@ func (g *grapevineListener) SetClientCache(clientCache GrapevineClientCache) {
 	g.clientCache = clientCache
 }
 
-func (g *grapevineListener) SetAccountId(accountId services.AccountId) {
+func (g *grapevineListener) SetAccountId(accountId common.AccountId) {
 	g.accountId = accountId
 }
 
 func NewGrapevineListener(ctx CallCtx,
 	onSearchCb func(searchId SearchId, query string) bool,
-	onSearchResultCb func(searchId SearchId, response string, accountId services.AccountId, ip string, port int32),
+	onSearchResultCb func(searchId SearchId, response string, accountId common.AccountId, ip string, port int),
 ) GrapevineListener {
 	return &grapevineListener{ctx: ctx.NewCtx("server"), onSearchCb: onSearchCb, onSearchResultCb: onSearchResultCb}
 }
@@ -98,9 +98,9 @@ func (g *grapevineListener) onSearchResult(writer http.ResponseWriter, req *http
 	g.onSearchResultCb(
 		SearchId(sr.SearchId),
 		sr.GetResponse(),
-		services.NewAccountId(sr.GetResponder().AccountId),
-		sr.GetResponder().GetAddress().GetIpAddress(),
-		sr.GetResponder().GetAddress().GetPort())
+		common.NewAccountId(sr.GetResponder().AccountId),
+		sr.GetResponder().GetAddress().IpAddress,
+		int(sr.GetResponder().GetAddress().Port))
 }
 
 func (g *grapevineListener) onGossip(writer http.ResponseWriter, req *http.Request) {
@@ -132,17 +132,17 @@ func (g *grapevineListener) onGossip(writer http.ResponseWriter, req *http.Reque
 			rumor := NewSearchRumor(NewRumor(
 				rumorId,
 				gg.EndOfLife.AsTime(),
-				services.NewAccountId(search.Requestor.AccountId),
-				services.NewServerAddress(net.ParseIP(search.Requestor.Address.IpAddress), search.Requestor.Address.Port),
+				common.NewAccountId(search.Requestor.AccountId),
+				common.NewAddress(net.ParseIP(search.Requestor.Address.IpAddress), int(search.Requestor.Address.Port)),
 			), search.Query)
 
 			if g.onSearchCb(SearchId(rumorId.String()), search.Query) {
 				// We support this type of search, invite them.
 				log.Info().Msgf("onSearchCB result . . . ")
 
-				contact := services.UserContact{
+				addr := common.Address{
 					Ip:   net.ParseIP(search.Requestor.GetAddress().IpAddress),
-					Port: search.Requestor.GetAddress().GetPort(),
+					Port: int(search.Requestor.GetAddress().GetPort()),
 				}
 
 				searchResult := pb.SearchResultResponse{
@@ -161,9 +161,9 @@ func (g *grapevineListener) onGossip(writer http.ResponseWriter, req *http.Reque
 					continue
 				}
 
-				client := g.clientCache.GetClient(contact).GetClient()
-				addr := fmt.Sprintf("https://%s/searchresult", contact.GetURL())
-				resp, err := client.Post(addr, "grpc-message-type", bytes.NewReader(b))
+				client := g.clientCache.GetClient(addr).GetClient()
+				url := fmt.Sprintf("https://%s/searchresult", addr.GetURL())
+				resp, err := client.Post(url, "grpc-message-type", bytes.NewReader(b))
 				if err != nil {
 					log.Error().Err(err).Msg("\tTried to post but got error")
 					continue

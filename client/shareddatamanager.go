@@ -63,7 +63,7 @@ func (sdm *sharedDataManager) Invite(s SharedData, recipient services.UserContac
 
 	invite := pb.SharedDataInvite{
 		SharedDataId: string(s.GetId()),
-		Creator:      s.GetCreator().GetPB(),
+		Creator:      s.GetCreator().ToPB(),
 	}
 
 	b, err := protoc.Marshal(invite)

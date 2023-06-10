@@ -1,13 +1,17 @@
 package client
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"sync"
 	"time"
 
+	protoc "github.com/golang/protobuf/proto"
 	"github.com/hoyle1974/grapevine/common"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
@@ -15,6 +19,7 @@ import (
 
 type GrapevineClientCache interface {
 	GetClient(common.Address) GrapevineClient
+	POST(common.Address, string, protoc.Message, protoc.Message) error
 }
 
 type grapevineClientCache struct {
@@ -93,4 +98,31 @@ func (g *grapevineClientCache) GetClient(addr common.Address) GrapevineClient {
 	}
 
 	return client
+}
+
+// Helper functions to make posts
+func (g *grapevineClientCache) POST(addr common.Address, url string, req protoc.Message, gresp protoc.Message) error {
+	client := g.GetClient(addr).GetClient()
+
+	b, err := protoc.Marshal(req)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Post(fmt.Sprintf("https://%s%s", addr.GetURL(), url), "grpc-message-type", bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+
+	b, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	err = protoc.Unmarshal(b, gresp)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

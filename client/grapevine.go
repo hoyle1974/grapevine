@@ -17,7 +17,7 @@ import (
 
 type Grapevine interface {
 	Start(ip net.IP) (int, error)
-	Serve(s SharedData)
+	Serve(s SharedData) SharedData
 	JoinShare(s SharedData)
 	LeaveShare(s SharedData)
 	Invite(s SharedData, recipient common.Contact, as string) bool
@@ -68,7 +68,7 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 	g.clientCache = NewGrapevineClientCache()
 	g.listener.SetClientCache(g.clientCache)
 
-	g.sharedDataManager = NewSharedDataManager(g.clientCache)
+	g.sharedDataManager = NewSharedDataManager(g.listener, g.clientCache)
 
 	g.gossip = NewGossip(ctx, common.NewAddress(ip, port))
 	go g.gossip.GossipLoop(g.clientCache)
@@ -144,9 +144,9 @@ func (g *grapevine) Login(username string, password string, ip net.IP, port int)
 
 //------------------------------
 
-func (g *grapevine) Serve(s SharedData) {
+func (g *grapevine) Serve(s SharedData) SharedData {
 	// Make this shared data actually shareable
-	g.sharedDataManager.Serve(s)
+	return g.sharedDataManager.Serve(s)
 }
 
 func (g *grapevine) JoinShare(s SharedData) {

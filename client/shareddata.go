@@ -23,6 +23,7 @@ type ClientCallback interface {
 }
 
 type SharedData interface {
+	IsProxy() bool
 	GetCreator() common.Contact
 	GetId() SharedDataId
 	Create(key string, value interface{}, owner string, visibility string)
@@ -53,6 +54,10 @@ type sharedData struct {
 
 func NewSharedData(creator common.Contact) SharedData {
 	return &sharedData{creator: creator}
+}
+
+func (s *sharedData) IsProxy() bool {
+	return false
 }
 
 func (s *sharedData) GetCreator() common.Contact {

@@ -21,6 +21,7 @@ import (
 
 type GrapevineListener interface {
 	Listen(net.IP) (int, error)
+	GetMe() common.Contact
 	GetIp() net.IP
 	GetPort() int
 	SetGossip(gossip Gossip)
@@ -37,6 +38,10 @@ type grapevineListener struct {
 	clientCache      GrapevineClientCache
 	onSearchCb       func(searchId SearchId, query string) bool
 	onSearchResultCb func(searchId SearchId, response string, accountId common.AccountId, ip string, port int)
+}
+
+func (g *grapevineListener) GetMe() common.Contact {
+	return common.NewContact(g.accountId, g.ip, g.port)
 }
 
 func (g *grapevineListener) GetIp() net.IP {

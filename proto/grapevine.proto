@@ -81,18 +81,56 @@ service GrapevineService {
 message SharedDataInvite {
   string sharedDataId  = 1;
   UserContact creator = 2;
+  string as = 3;
 }
 
 message SharedDataInviteResponse {
 }
 
-message ShareDataSetValue {
+message SharedDataCreate {
+  string sharedDataId = 1;
+  UserContact originator = 2;
+  string key = 3;
+  string value = 4;
+  string owner = 5;
+  string visibility = 6;
+}
+
+message SharedDataCreateResponse {
+  
+}
+
+message SharedDataSet {
   string sharedDataId = 1;
   UserContact originator = 2;
   string key = 3;
   string value = 4;
 }
 
-message SharedDataSetValueResponse {
+message SharedDataSetResponse {
   
 }
+
+message SharedDataAppend {
+  string sharedDataId = 1;
+  UserContact originator = 2;
+  string key = 3;
+  string value = 4;
+}
+
+message SharedDataAppendResponse {
+  
+}
+
+message SharedDataChangeOwner {
+  string sharedDataId = 1;
+  UserContact originator = 2;
+  string key = 3;
+  string owner = 4;
+}
+
+message SharedDataChangeOwnerResponse {
+  
+}
+
+

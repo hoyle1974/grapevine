@@ -75,6 +75,7 @@ deploy-tictactoe:
 	docker push k3d-myregistry.localhost:12345/tictactoe:latest
 
 deploy: build deploy-auth deploy-account deploy-sociallist 
+	-killall kubectl
 	-kubectl delete -f grapevine.yaml
 	kubectl create -f grapevine.yaml
 	kubectl port-forward --namespace default svc/auth 8080:8080 &

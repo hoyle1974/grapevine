@@ -80,7 +80,7 @@ func (c *Callback) OnSearchResult(id client.SearchId, query string, contact comm
 	c.sharedData.Create("board", ".........", c.sharedData.GetMe(), "default")
 	c.sharedData.Create("chat", []string{}, "default", "default")
 	c.sharedData.Create("visibility-group", map[string][]string{"default": []string{"player1", "player2"}}, "system", "default")
-	c.grapevine.Serve(c.sharedData) // The structure is now live and can be worked with by this client or others
+	c.sharedData = c.grapevine.Serve(c.sharedData) // The structure is now live and can be worked with by this client or others
 
 	// Invite your contact to join the structure as player2
 	if !c.grapevine.Invite(c.sharedData, contact, "player2") {

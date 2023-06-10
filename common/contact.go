@@ -7,6 +7,10 @@ import (
 	pb "github.com/hoyle1974/grapevine/proto"
 )
 
+type Myself interface {
+	GetMe() Contact
+}
+
 type Address struct {
 	Ip   net.IP
 	Port int

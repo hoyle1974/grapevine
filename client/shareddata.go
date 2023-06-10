@@ -15,7 +15,7 @@ func (s SearchId) String() string {
 
 type ClientCallback interface {
 	OnSearch(id SearchId, query string) bool
-	OnSearchResult(id SearchId, query string, contact services.UserContact)
+	OnSearchResult(id SearchId, result string, contact services.UserContact)
 	OnInvited(sharedData SharedData, me string, contact services.UserContact)
 	OnInviteAccepted(sharedData SharedData, contact services.UserContact)
 }

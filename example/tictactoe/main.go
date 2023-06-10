@@ -52,11 +52,14 @@ func (c *Callback) OnSearch(id client.SearchId, query string) bool {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if !c.searching {
+		fmt.Println("We are done searching!")
 		return false // We are done searching
 	}
 	if query == gameType {
+		fmt.Println("We support this game!")
 		return true // We support this game type
 	}
+	fmt.Printf("We do not support %v!\n", query)
 	return false // Not for us
 }
 
@@ -259,7 +262,7 @@ func main() {
 	}
 	ctx.Info().Msg("Build Info Version: " + info.Main.Version + " " + info.Main.Sum)
 
-	cb := &Callback{}
+	cb := &Callback{searching: true}
 	cb.grapevine = client.NewGrapevine(cb, ctx)
 	ip := GetOutboundIP(ctx)
 	ctx.Info().Msgf("Outbound IP is: %v", ip)

@@ -28,13 +28,14 @@ type Grapevine interface {
 }
 
 type grapevine struct {
-	lock        sync.Mutex
-	ctx         CallCtx
-	cb          ClientCallback
-	listener    GrapevineListener
-	clientCache GrapevineClientCache
-	accountId   services.AccountId
-	gossip      Gossip
+	lock              sync.Mutex
+	ctx               CallCtx
+	cb                ClientCallback
+	listener          GrapevineListener
+	clientCache       GrapevineClientCache
+	accountId         services.AccountId
+	gossip            Gossip
+	sharedDataManager SharedDataManager
 }
 
 func NewGrapevine(cb ClientCallback, ctx CallCtx) Grapevine {
@@ -50,7 +51,13 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 
 	// Start the server
 	ctx.Info().Msg("Starting listener . . ")
-	g.listener = NewGrapevineListener(ctx)
+	onSearchCB := func(searchId SearchId, query string) bool {
+		return g.cb.OnSearch(searchId, query)
+	}
+	onSearchResultCB := func(searchId SearchId, response string, accountId services.AccountId, ip string, port int32) {
+		g.cb.OnSearchResult(searchId, response, services.UserContact{AccountID: accountId, Ip: net.ParseIP(ip), Port: port})
+	}
+	g.listener = NewGrapevineListener(ctx, onSearchCB, onSearchResultCB)
 	port, err := g.listener.Listen(ip)
 	if err != nil {
 		return 0, err
@@ -59,12 +66,29 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 	// Create the client cache manager
 	ctx.Info().Msg("Creating client cache manager . . ")
 	g.clientCache = NewGrapevineClientCache()
+	g.listener.SetClientCache(g.clientCache)
+
+	g.sharedDataManager = NewSharedDataManager(g.clientCache)
 
 	g.gossip = NewGossip(ctx, services.NewServerAddress(ip, int32(port)))
 	go g.gossip.GossipLoop(g.clientCache)
 	g.listener.SetGossip(g.gossip)
 
+	ctx.Info().Msgf("Adding server %v", ip)
 	g.gossip.AddServer(services.NewServerAddress(ip, 8911))
+
+	// addrs, err := net.LookupHost(*gossipAddr)
+	// if err == nil {
+	// 	if len(addrs) == 0 {
+	// 		ctx.Error().Msgf("No addresses found for %s", *gossipAddr)
+	// 	} else {
+	// 		ip := net.ParseIP(addrs[0])
+	// 		ctx.Info().Msgf("Adding server %v from host %v", ip, addrs[0])
+	// 		g.gossip.AddServer(services.NewServerAddress(ip, 8911))
+	// 	}
+	// } else {
+	// 	ctx.Error().Err(err).Msgf("There was an error looking up %s", *gossipAddr)
+	// }
 
 	return port, nil
 }
@@ -114,6 +138,7 @@ func (g *grapevine) Login(username string, password string, ip net.IP, port int)
 	}
 
 	g.accountId = services.NewAccountId(resp.GetUserId())
+	g.listener.SetAccountId(g.accountId)
 	return g.accountId, nil
 }
 
@@ -121,20 +146,22 @@ func (g *grapevine) Login(username string, password string, ip net.IP, port int)
 
 func (g *grapevine) Serve(s SharedData) {
 	// Make this shared data actually shareable
+	g.sharedDataManager.Serve(s)
 }
 
 func (g *grapevine) JoinShare(s SharedData) {
 	// Join a shared data
+	g.sharedDataManager.JoinShare(s)
 }
 
 func (g *grapevine) LeaveShare(s SharedData) {
 	// Leave a shared data
+	g.sharedDataManager.LeaveShare(s)
 }
 
 func (g *grapevine) Invite(s SharedData, recipient services.UserContact, as string) bool {
 	// Invite someone to our shared data
-
-	return false
+	return g.sharedDataManager.Invite(s, recipient, as)
 }
 
 // Initiating a search

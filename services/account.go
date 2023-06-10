@@ -1,6 +1,8 @@
 package services
 
-func CreateAccount(app AppCtx, username string, password string) (AccountId, error) {
+import "github.com/hoyle1974/grapevine/models"
+
+func CreateAccount(app AppCtx, username string, password string) (models.AccountId, error) {
 	log := app.Log("CreateAccount")
 	log.Printf("Received: %v/****", username)
 
@@ -18,5 +20,5 @@ func CreateAccount(app AppCtx, username string, password string) (AccountId, err
 	var id string
 	row.Scan(&id)
 
-	return NewAccountId(id), nil
+	return models.NewAccountId(id), nil
 }

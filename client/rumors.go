@@ -156,6 +156,5 @@ func (r *rumors) GetProtobuf() *proto.GossipRequest {
 
 	r.rumors = newRumors
 
-	log.Debug().Msgf("Returning gossip request with %d reuors", len(toGossip))
 	return &proto.GossipRequest{Gossip: toGossip}
 }

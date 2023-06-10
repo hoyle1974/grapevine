@@ -8,14 +8,14 @@ import (
 	"github.com/lib/pq"
 )
 
-type UserContact struct {
+type userContact struct {
 	AccountID AccountId
 	Ip        net.IP
 	Port      int32
 	Time      time.Time
 }
 
-func (u UserContact) GetURL() string {
+func (u userContact) GetURL() string {
 	return fmt.Sprintf("%s:%d", u.Ip.String(), u.Port)
 }
 
@@ -37,7 +37,7 @@ func UpdateUserContact(appCtx AppCtx, accountId AccountId, ip net.IP, port int32
 	return nil
 }
 
-func GetUserContacts(appCtx AppCtx, accountIDs []AccountId) ([]UserContact, error) {
+func GetUserContacts(appCtx AppCtx, accountIDs []AccountId) ([]userContact, error) {
 	log := appCtx.Log("GetUserContacts")
 	log.Printf("Received: %v", accountIDs)
 
@@ -51,10 +51,10 @@ func GetUserContacts(appCtx AppCtx, accountIDs []AccountId) ([]UserContact, erro
 
 	rows, err := appCtx.db.Query(stmt, pq.Array(params))
 	if err != nil {
-		return []UserContact{}, err
+		return []userContact{}, err
 	}
 
-	contacts := make([]UserContact, 0)
+	contacts := make([]userContact, 0)
 	defer rows.Close()
 	for rows.Next() {
 		var id string
@@ -63,7 +63,7 @@ func GetUserContacts(appCtx AppCtx, accountIDs []AccountId) ([]UserContact, erro
 		var timestamp time.Time
 
 		rows.Scan(&id, &ip, &port, &timestamp)
-		contacts = append(contacts, UserContact{
+		contacts = append(contacts, userContact{
 			AccountID: NewAccountId(id),
 			Ip:        net.ParseIP(ip),
 			Port:      port,

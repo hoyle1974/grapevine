@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net"
@@ -9,6 +10,7 @@ import (
 	"runtime"
 
 	"github.com/golang/protobuf/proto"
+	protoc "github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	pb "github.com/hoyle1974/grapevine/proto"
 	"github.com/hoyle1974/grapevine/services"
@@ -22,13 +24,19 @@ type GrapevineListener interface {
 	GetIp() net.IP
 	GetPort() int
 	SetGossip(gossip Gossip)
+	SetClientCache(clientCache GrapevineClientCache)
+	SetAccountId(accountId services.AccountId)
 }
 
 type grapevineListener struct {
-	ctx  CallCtx
-	ip   net.IP
-	port int
-	g    Gossip
+	ctx              CallCtx
+	accountId        services.AccountId
+	ip               net.IP
+	port             int
+	g                Gossip
+	clientCache      GrapevineClientCache
+	onSearchCb       func(searchId SearchId, query string) bool
+	onSearchResultCb func(searchId SearchId, response string, accountId services.AccountId, ip string, port int32)
 }
 
 func (g *grapevineListener) GetIp() net.IP {
@@ -43,8 +51,19 @@ func (g *grapevineListener) SetGossip(gossip Gossip) {
 	g.g = gossip
 }
 
-func NewGrapevineListener(ctx CallCtx) GrapevineListener {
-	return &grapevineListener{ctx: ctx.NewCtx("server")}
+func (g *grapevineListener) SetClientCache(clientCache GrapevineClientCache) {
+	g.clientCache = clientCache
+}
+
+func (g *grapevineListener) SetAccountId(accountId services.AccountId) {
+	g.accountId = accountId
+}
+
+func NewGrapevineListener(ctx CallCtx,
+	onSearchCb func(searchId SearchId, query string) bool,
+	onSearchResultCb func(searchId SearchId, response string, accountId services.AccountId, ip string, port int32),
+) GrapevineListener {
+	return &grapevineListener{ctx: ctx.NewCtx("server"), onSearchCb: onSearchCb, onSearchResultCb: onSearchResultCb}
 }
 
 /*
@@ -60,6 +79,29 @@ service GrapevineService {
 }
 
 */
+
+func (g *grapevineListener) onSearchResult(writer http.ResponseWriter, req *http.Request) {
+	log := g.ctx.NewCtx("onSearchResult")
+	log.Info().Msg("\tReceive")
+
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("error reading body while handling /distribute")
+		writer.WriteHeader(http.StatusServiceUnavailable)
+		return
+	}
+	sr := &pb.SearchResultResponse{}
+	proto.Unmarshal(body, sr)
+
+	log.Debug().Msgf("%v", sr)
+
+	g.onSearchResultCb(
+		SearchId(sr.SearchId),
+		sr.GetResponse(),
+		services.NewAccountId(sr.GetResponder().AccountId),
+		sr.GetResponder().GetAddress().GetIpAddress(),
+		sr.GetResponder().GetAddress().GetPort())
+}
 
 func (g *grapevineListener) onGossip(writer http.ResponseWriter, req *http.Request) {
 	log := g.ctx.NewCtx("onGossip")
@@ -93,6 +135,42 @@ func (g *grapevineListener) onGossip(writer http.ResponseWriter, req *http.Reque
 				services.NewAccountId(search.Requestor.AccountId),
 				services.NewServerAddress(net.ParseIP(search.Requestor.Address.IpAddress), search.Requestor.Address.Port),
 			), search.Query)
+
+			if g.onSearchCb(SearchId(rumorId.String()), search.Query) {
+				// We support this type of search, invite them.
+				log.Info().Msgf("onSearchCB result . . . ")
+
+				contact := services.UserContact{
+					Ip:   net.ParseIP(search.Requestor.GetAddress().IpAddress),
+					Port: search.Requestor.GetAddress().GetPort(),
+				}
+
+				searchResult := pb.SearchResultResponse{
+					Responder: &pb.Contact{
+						AccountId: g.accountId.String(),
+						Address: &pb.ClientAddress{
+							IpAddress: g.ip.String(),
+							Port:      int32(g.port),
+						},
+					},
+					SearchId: search.SearchId,
+				}
+				b, err := protoc.Marshal(&searchResult)
+				if err != nil {
+					log.Error().Err(err).Msg("Problem marshaling")
+					continue
+				}
+
+				client := g.clientCache.GetClient(contact).GetClient()
+				addr := fmt.Sprintf("https://%s/searchresult", contact.GetURL())
+				resp, err := client.Post(addr, "grpc-message-type", bytes.NewReader(b))
+				if err != nil {
+					log.Error().Err(err).Msg("\tTried to post but got error")
+					continue
+				} else {
+					log.Info().Msgf("\tResponse: %v", resp.StatusCode)
+				}
+			}
 
 			go g.g.AddToGossip(rumor)
 		} else {
@@ -152,6 +230,7 @@ func (g *grapevineListener) Listen(ip net.IP) (int, error) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/gossip", g.onGossip)
+	mux.HandleFunc("/searchresult", g.onSearchResult)
 	// mux.HandleFunc("/data/invite", g.gossip)
 	// mux.HandleFunc("/data/change/owner", g.gossip)
 	// mux.HandleFunc("/data/change/data", g.gossip)

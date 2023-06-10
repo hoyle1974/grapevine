@@ -27,6 +27,9 @@ message SearchResultRequest {
 }
 
 message SearchResultResponse {
+  string search_id = 1;
+  Contact responder = 2;
+  string response = 3;
 }
 
 
@@ -79,4 +82,23 @@ service GrapevineService {
   rpc ChangeDataOwner (ChangeDataOwnerRequest) returns (ChangeDataOwnerResponse);
   rpc ChangeData (ChangeDataRequest) returns (ChangeDataResponse);
   rpc LeaveSharedData (LeaveSharedDataRequest) returns (LeaveSharedDataResponse);
+}
+
+message SharedDataInvite {
+  string sharedDataId  = 1;
+  Contact creator = 2;
+}
+
+message SharedDataInviteResponse {
+}
+
+message ShareDataSetValue {
+  string sharedDataId = 1;
+  Contact originator = 2;
+  string key = 3;
+  string value = 4;
+}
+
+message SharedDataSetValueResponse {
+  
 }

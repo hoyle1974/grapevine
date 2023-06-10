@@ -84,13 +84,14 @@ func (g *gossipMongers) GetRandomServerAddress() *services.ServerAddress {
 	g.lock.RLock()
 	defer g.lock.RUnlock()
 
+	log.Debug().Msgf("Monger List Size: %d", len(g.mongers))
+
 	if len(g.mongers) == 0 {
-		log.Debug().Msg("No servers")
 		return nil
 	}
 
 	addr := g.mongers[rand.Intn(len(g.mongers))].serverAddress
-	log.Debug().Msgf("Returning %v", addr)
+	// log.Debug().Msgf("Returning %v", addr)
 
 	return &addr
 }

@@ -62,7 +62,7 @@ func (g *gossip) GossipLoop(clientCache GrapevineClientCache) {
 		addr := g.mongers.GetRandomServerAddress()
 		if addr == nil {
 			// No one to gossip to
-			log.Warn().Msg("No servers to gossip to")
+			// log.Warn().Msg("No servers to gossip to")
 			continue
 		}
 
@@ -70,7 +70,7 @@ func (g *gossip) GossipLoop(clientCache GrapevineClientCache) {
 
 		req := g.getGossipRequest()
 		if req == nil {
-			log.Warn().Msg("Nothing to gossip about, this is weird")
+			// log.Warn().Msg("Nothing to gossip about, this is weird")
 			continue
 		}
 		b, err := protoc.Marshal(req)

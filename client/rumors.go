@@ -35,7 +35,7 @@ func NewRumor(rumorId uuid.UUID, expiry time.Time, creatorAccountId common.Accou
 }
 
 func (r rumor) String() string {
-	return fmt.Sprintf("Id(%v) Expired(%v) Creator(%v,%v)",
+	return fmt.Sprintf("Id(%v) Expired(%v) Creator(%v)",
 		r.rumorId.String(),
 		r.expiry.String(),
 		r.creator.String(),
@@ -107,7 +107,7 @@ func NewRumors(ctx CallCtx) Rumors {
 }
 
 func (r *rumors) AddRumor(rumor Rumor) {
-	log := r.ctx.NewCtx("AddRumor")
+	//log := r.ctx.NewCtx("AddRumor")
 
 	r.lock.Lock()
 	defer r.lock.Unlock()
@@ -118,7 +118,7 @@ func (r *rumors) AddRumor(rumor Rumor) {
 		}
 	}
 
-	log.Info().Msgf("Adding rumor: %v", rumor)
+	//log.Info().Msgf("Adding rumor: %v", rumor)
 	r.rumors = append(r.rumors, rumor)
 }
 

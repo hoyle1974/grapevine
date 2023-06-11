@@ -79,12 +79,12 @@ func (g *gossipMongers) AddMonger(addr common.Address) {
 }
 
 func (g *gossipMongers) GetRandomServerAddress() *common.Address {
-	log := g.ctx.NewCtx("GetRandomServerAddress")
+	// log := g.ctx.NewCtx("GetRandomServerAddress")
 
 	g.lock.RLock()
 	defer g.lock.RUnlock()
 
-	log.Debug().Msgf("Monger List Size: %d", len(g.mongers))
+	// log.Debug().Msgf("Monger List Size: %d", len(g.mongers))
 
 	if len(g.mongers) == 0 {
 		return nil

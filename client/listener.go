@@ -80,15 +80,15 @@ func NewGrapevineListener(ctx CallCtx,
 }
 
 func (g *grapevineListener) onSharedData(writer http.ResponseWriter, req *http.Request) {
-	log := g.ctx.NewCtx("onSharedData")
-	log.Info().Msg("\tReceive")
+	// log := g.ctx.NewCtx("onSharedData")
+	// log.Info().Msg("\tReceive")
 
 	g.sdm.OnSharedDataRequest(writer, req)
 }
 
 func (g *grapevineListener) onSearchResult(writer http.ResponseWriter, req *http.Request) {
 	log := g.ctx.NewCtx("onSearchResult")
-	log.Info().Msg("\tReceive")
+	// log.Info().Msg("\tReceive")
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -99,7 +99,7 @@ func (g *grapevineListener) onSearchResult(writer http.ResponseWriter, req *http
 	sr := &pb.SearchResultResponse{}
 	proto.Unmarshal(body, sr)
 
-	log.Debug().Msgf("%v", sr)
+	// log.Debug().Msgf("%v", sr)
 
 	g.onSearchResultCb(
 		SearchId(sr.SearchId),
@@ -112,7 +112,7 @@ func (g *grapevineListener) onSearchResult(writer http.ResponseWriter, req *http
 func (g *grapevineListener) onGossip(writer http.ResponseWriter, req *http.Request) {
 	log := g.ctx.NewCtx("onGossip")
 
-	log.Info().Msg("\tReceive")
+	//log.Info().Msg("\tReceive")
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -123,7 +123,7 @@ func (g *grapevineListener) onGossip(writer http.ResponseWriter, req *http.Reque
 	gr := &pb.GossipRequest{}
 	proto.Unmarshal(body, gr)
 
-	log.Info().Msgf("\tContains %v messages", len(gr.Gossip))
+	//log.Info().Msgf("\tContains %v messages", len(gr.Gossip))
 
 	for _, gg := range gr.Gossip {
 		search := gg.GetSearch()

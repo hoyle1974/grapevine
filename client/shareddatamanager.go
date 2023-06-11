@@ -40,7 +40,7 @@ func NewSharedDataManager(ctx CallCtx, myself common.Myself, cb ClientCallback, 
 
 func (sdm *sharedDataManager) OnSharedDataRequest(writer http.ResponseWriter, req *http.Request) {
 	log := sdm.ctx.NewCtx("OnSharedDataRequest")
-	sdm.ctx.Info().Str("uri", req.RequestURI).Msg("request")
+	//sdm.ctx.Info().Str("uri", req.RequestURI).Msg("request")
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {

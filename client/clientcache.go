@@ -102,6 +102,7 @@ func (g *grapevineClientCache) GetClient(addr common.Address) GrapevineClient {
 
 // Helper functions to make posts
 func (g *grapevineClientCache) POST(addr common.Address, url string, req protoc.Message, gresp protoc.Message) error {
+	fmt.Printf("*** POST %s\n", fmt.Sprintf("https://%s%s", addr.GetURL(), url))
 	client := g.GetClient(addr).GetClient()
 
 	b, err := protoc.Marshal(req)
@@ -113,12 +114,18 @@ func (g *grapevineClientCache) POST(addr common.Address, url string, req protoc.
 	if err != nil {
 		return err
 	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("invalid status code: %d", resp.StatusCode)
+	}
 
 	b, err = io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 
+	if gresp == nil {
+		return nil // We don't care about the response
+	}
 	err = protoc.Unmarshal(b, gresp)
 	if err != nil {
 		return err

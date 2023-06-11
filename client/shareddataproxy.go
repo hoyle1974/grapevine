@@ -10,6 +10,7 @@ import (
 
 type SharedDataProxy interface {
 	SharedData
+	GetOrigin() SharedData
 	AddInvitee(recipient common.Contact, as string)
 }
 
@@ -38,6 +39,10 @@ type sharedDataProxy struct {
 	origin   SharedData
 	sdm      *sharedDataManager
 	invities map[string]common.Contact
+}
+
+func (p *sharedDataProxy) GetOrigin() SharedData {
+	return p.origin
 }
 
 func (p *sharedDataProxy) IsProxy() bool {

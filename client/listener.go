@@ -1,7 +1,6 @@
 package client
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net"
@@ -10,7 +9,6 @@ import (
 	"runtime"
 
 	"github.com/golang/protobuf/proto"
-	protoc "github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/hoyle1974/grapevine/common"
 	pb "github.com/hoyle1974/grapevine/proto"
@@ -27,6 +25,7 @@ type GrapevineListener interface {
 	SetGossip(gossip Gossip)
 	SetClientCache(clientCache GrapevineClientCache)
 	SetAccountId(accountId common.AccountId)
+	SetSharedDataManager(sdm SharedDataManager)
 }
 
 type grapevineListener struct {
@@ -38,6 +37,7 @@ type grapevineListener struct {
 	clientCache      GrapevineClientCache
 	onSearchCb       func(searchId SearchId, query string) bool
 	onSearchResultCb func(searchId SearchId, response string, accountId common.AccountId, ip string, port int)
+	sdm              SharedDataManager
 }
 
 func (g *grapevineListener) GetMe() common.Contact {
@@ -64,26 +64,27 @@ func (g *grapevineListener) SetAccountId(accountId common.AccountId) {
 	g.accountId = accountId
 }
 
+func (g *grapevineListener) SetSharedDataManager(sdm SharedDataManager) {
+	g.sdm = sdm
+}
+
 func NewGrapevineListener(ctx CallCtx,
 	onSearchCb func(searchId SearchId, query string) bool,
 	onSearchResultCb func(searchId SearchId, response string, accountId common.AccountId, ip string, port int),
 ) GrapevineListener {
-	return &grapevineListener{ctx: ctx.NewCtx("server"), onSearchCb: onSearchCb, onSearchResultCb: onSearchResultCb}
+	return &grapevineListener{
+		ctx:              ctx.NewCtx("server"),
+		onSearchCb:       onSearchCb,
+		onSearchResultCb: onSearchResultCb,
+	}
 }
 
-/*
-service GrapevineService {
-  rpc Gossip (GossipRequest) returns (GossipResponse);
+func (g *grapevineListener) onSharedData(writer http.ResponseWriter, req *http.Request) {
+	log := g.ctx.NewCtx("onSharedData")
+	log.Info().Msg("\tReceive")
 
-  rpc SearchResult (SearchResultRequest) returns (SearchResultResponse);
-
-  rpc SharedInvitation (SharedInvitationRequest) returns (SharedInvitationResponse);
-  rpc ChangeDataOwner (ChangeDataOwnerRequest) returns (ChangeDataOwnerResponse);
-  rpc ChangeData (ChangeDataRequest) returns (ChangeDataResponse);
-  rpc LeaveSharedData (LeaveSharedDataRequest) returns (LeaveSharedDataResponse);
+	g.sdm.OnSharedDataRequest(writer, req)
 }
-
-*/
 
 func (g *grapevineListener) onSearchResult(writer http.ResponseWriter, req *http.Request) {
 	log := g.ctx.NewCtx("onSearchResult")
@@ -157,21 +158,28 @@ func (g *grapevineListener) onGossip(writer http.ResponseWriter, req *http.Reque
 					},
 					SearchId: search.SearchId,
 				}
-				b, err := protoc.Marshal(&searchResult)
+				err := g.clientCache.POST(addr, "/searchresult", &searchResult, nil)
 				if err != nil {
-					log.Error().Err(err).Msg("Problem marshaling")
+					log.Error().Err(err).Msg("Error posting")
 					continue
 				}
+				/*
+					b, err := protoc.Marshal(&searchResult)
+					if err != nil {
+						log.Error().Err(err).Msg("Problem marshaling")
+						continue
+					}
 
-				client := g.clientCache.GetClient(addr).GetClient()
-				url := fmt.Sprintf("https://%s/searchresult", addr.GetURL())
-				resp, err := client.Post(url, "grpc-message-type", bytes.NewReader(b))
-				if err != nil {
-					log.Error().Err(err).Msg("\tTried to post but got error")
-					continue
-				} else {
-					log.Info().Msgf("\tResponse: %v", resp.StatusCode)
-				}
+					client := g.clientCache.GetClient(addr).GetClient()
+					url := fmt.Sprintf("https://%s/searchresult", addr.GetURL())
+					resp, err := client.Post(url, "grpc-message-type", bytes.NewReader(b))
+					if err != nil {
+						log.Error().Err(err).Msg("\tTried to post but got error")
+						continue
+					} else {
+						log.Info().Msgf("\tResponse: %v", resp.StatusCode)
+					}
+				*/
 			}
 
 			go g.g.AddToGossip(rumor)
@@ -233,6 +241,10 @@ func (g *grapevineListener) Listen(ip net.IP) (int, error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/gossip", g.onGossip)
 	mux.HandleFunc("/searchresult", g.onSearchResult)
+	mux.HandleFunc("/shareddata/invite", g.onSharedData)
+	mux.HandleFunc("/shareddata/changeowner", g.onSharedData)
+	mux.HandleFunc("/shareddata/set", g.onSharedData)
+	mux.HandleFunc("/shareddata/append", g.onSharedData)
 	// mux.HandleFunc("/data/invite", g.gossip)
 	// mux.HandleFunc("/data/change/owner", g.gossip)
 	// mux.HandleFunc("/data/change/data", g.gossip)

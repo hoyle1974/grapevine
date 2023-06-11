@@ -22,6 +22,7 @@ type Grapevine interface {
 	LeaveShare(s SharedData)
 	Invite(s SharedData, recipient common.Contact, as string) bool
 	Search(key string) SearchId
+	GetMe() common.Contact
 
 	CreateAccount(username string, password string) error
 	Login(username string, password string, ip net.IP, port int) (common.AccountId, error)
@@ -40,6 +41,10 @@ type grapevine struct {
 
 func NewGrapevine(cb ClientCallback, ctx CallCtx) Grapevine {
 	return &grapevine{cb: cb, ctx: ctx}
+}
+
+func (g *grapevine) GetMe() common.Contact {
+	return g.listener.GetMe()
 }
 
 func (g *grapevine) Start(ip net.IP) (int, error) {
@@ -68,7 +73,8 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 	g.clientCache = NewGrapevineClientCache()
 	g.listener.SetClientCache(g.clientCache)
 
-	g.sharedDataManager = NewSharedDataManager(g.listener, g.clientCache)
+	g.sharedDataManager = NewSharedDataManager(ctx, g.listener, g.clientCache)
+	g.listener.SetSharedDataManager(g.sharedDataManager)
 
 	g.gossip = NewGossip(ctx, common.NewAddress(ip, port))
 	go g.gossip.GossipLoop(g.clientCache)

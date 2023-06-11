@@ -52,8 +52,8 @@ type sharedData struct {
 	cb      func(key string)
 }
 
-func NewSharedData(creator common.Contact) SharedData {
-	return &sharedData{creator: creator}
+func NewSharedData(creator common.Contact, id SharedDataId) SharedData {
+	return &sharedData{id: id, creator: creator, data: make(map[string]data)}
 }
 
 func (s *sharedData) IsProxy() bool {

@@ -73,8 +73,10 @@ func (c *Callback) OnSearchResult(id client.SearchId, query string, contact comm
 	c.searching = false
 	fmt.Printf("Id: %v Query: %v\n", id, query)
 
+	me := c.grapevine.GetMe()
+
 	// Let's try starting a game with this client and see if they will accept our invitation
-	c.sharedData = client.NewSharedData(c.sharedData.GetCreator()) // Init the structure
+	c.sharedData = client.NewSharedData(me, client.SharedDataId(uuid.New().String())) // Init the structure
 	c.sharedData.SetMe("player1")
 	c.sharedData.Create("state", "start", c.sharedData.GetMe(), "default")
 	c.sharedData.Create("board", ".........", c.sharedData.GetMe(), "default")

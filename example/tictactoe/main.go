@@ -52,26 +52,28 @@ func (c *Callback) OnSearch(id client.SearchId, query string) bool {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if !c.searching {
-		fmt.Println("We are done searching!")
+		fmt.Println("TICTACTOE - We are done searching!")
 		return false // We are done searching
 	}
 	if query == gameType {
-		fmt.Println("We support this game!")
+		fmt.Println("TICTACTOE - We support this game!")
 		return true // We support this game type
 	}
-	fmt.Printf("We do not support %v!\n", query)
+	fmt.Printf("TICTACTOE - We do not support %v!\n", query)
 	return false // Not for us
 }
 
 // We found someone matching our game type search
 func (c *Callback) OnSearchResult(id client.SearchId, query string, contact common.Contact) {
 	c.lock.Lock()
-	defer c.lock.Unlock()
 	if !c.searching {
+		c.lock.Unlock()
 		return
 	}
 	c.searching = false
-	fmt.Printf("Id: %v Query: %v\n", id, query)
+	c.lock.Unlock()
+
+	fmt.Printf("TICTACTOE - Id: %v Query: %v\n", id, query)
 
 	me := c.grapevine.GetMe()
 
@@ -85,15 +87,19 @@ func (c *Callback) OnSearchResult(id client.SearchId, query string, contact comm
 	c.sharedData = c.grapevine.Serve(c.sharedData) // The structure is now live and can be worked with by this client or others
 
 	// Invite your contact to join the structure as player2
-	if !c.grapevine.Invite(c.sharedData, contact, "player2") {
+	if c.grapevine.Invite(c.sharedData, contact, "player2") {
+		fmt.Printf("TICTACTOE - invite succeeded")
+	} else {
+		fmt.Printf("TICTACTOE - invite failed")
 		c.grapevine.LeaveShare(c.sharedData)
 	}
 }
 
 // Someone has invited us to share data (in our case it's a game
-func (c *Callback) OnInvited(sharedData client.SharedData, me string, contact common.Contact) {
+func (c *Callback) OnInvited(sharedData client.SharedData, me string, contact common.Contact) bool {
 	c.lock.Lock()
 	defer c.lock.Unlock()
+	fmt.Printf("OnInvited - Id: %v Me: %v\n", sharedData.GetId(), me)
 
 	if c.sharedData != nil {
 		// Leave any existing share we have, probably not the best choice
@@ -101,18 +107,19 @@ func (c *Callback) OnInvited(sharedData client.SharedData, me string, contact co
 		c.sharedData = nil
 	}
 
-	// Agree to join with this shared data
-	c.grapevine.JoinShare(c.sharedData)
-
 	c.sharedData = sharedData
 
-	c.play()
+	go c.play()
+
+	return true
 }
 
 // Someone accepted our invitation to share the data
 func (c *Callback) OnInviteAccepted(sharedData client.SharedData, contact common.Contact) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
+	fmt.Printf("OnInviteAccepted - Id: %v\n", sharedData.GetId())
+
 	if sharedData.GetId() != c.sharedData.GetId() {
 		fmt.Printf("Unexpected invite received: %v vs %v\n", sharedData.GetId(), c.sharedData.GetId())
 		return
@@ -122,11 +129,11 @@ func (c *Callback) OnInviteAccepted(sharedData client.SharedData, contact common
 	fmt.Printf("Player %v has joined", contact.AccountId)
 	c.sharedData.Set("state", "player1")
 
-	c.play()
+	go c.play()
 }
 
 func getInput() (string, string) {
-	fmt.Printf("Input>")
+	fmt.Printf("Input (chat <msg> or move <int>)>")
 	reader := bufio.NewReader(os.Stdin)
 	text, _ := reader.ReadString('\n')
 
@@ -192,6 +199,7 @@ func didIWin(board string, piece string) bool {
 }
 
 func (c *Callback) play() {
+	fmt.Println("TICTACTOE - PLAY 1")
 	c.sharedData.OnDataChangeCB(func(key string) {
 		if key == "chat" {
 			chat := c.sharedData.Get("chat").([]string)
@@ -201,6 +209,7 @@ func (c *Callback) play() {
 
 	for {
 		// Wait for our turn to play
+		fmt.Println("TICTACTOE - PLAY 2")
 		for {
 			// Wait till we own the state (this means it's either or turn or the game is over and all game objects are owned by everyone
 			time.Sleep(time.Second)
@@ -208,6 +217,7 @@ func (c *Callback) play() {
 				break
 			}
 		}
+		fmt.Println("TICTACTOE - PLAY 2")
 		if c.sharedData.Get("state").(string) == c.sharedData.GetMe() {
 			fmt.Println("Your turn, make a move or chat:")
 		} else if c.sharedData.Get("state") == "finished" {
@@ -220,7 +230,7 @@ func (c *Callback) play() {
 			// Append to the chat array
 			c.sharedData.Append("chat", extra)
 		} else if input == "move" {
-			if c.sharedData.Get("state").(string) != c.sharedData.GetMe() {
+			if !c.sharedData.IsMe(c.sharedData.GetOwner("state")) {
 				fmt.Println("Not our turn to move")
 				continue
 			}

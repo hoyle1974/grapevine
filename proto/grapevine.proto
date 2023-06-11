@@ -85,6 +85,7 @@ message SharedDataInvite {
 }
 
 message SharedDataInviteResponse {
+  bool accepted = 1;
 }
 
 message SharedDataCreate {
@@ -97,7 +98,6 @@ message SharedDataCreate {
 }
 
 message SharedDataCreateResponse {
-  
 }
 
 message SharedDataSet {

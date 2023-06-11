@@ -8,7 +8,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/hoyle1974/grapevine/common"
 	pb "github.com/hoyle1974/grapevine/proto"
-	"github.com/rs/zerolog/log"
 )
 
 type SharedDataManager interface {
@@ -24,21 +23,24 @@ type sharedDataManager struct {
 	lock        sync.Mutex
 	ctx         CallCtx
 	myself      common.Myself
+	cb          ClientCallback
 	data        map[SharedDataId]SharedDataProxy
 	clientCache GrapevineClientCache
 }
 
-func NewSharedDataManager(ctx CallCtx, myself common.Myself, clientCache GrapevineClientCache) SharedDataManager {
+func NewSharedDataManager(ctx CallCtx, myself common.Myself, cb ClientCallback, clientCache GrapevineClientCache) SharedDataManager {
 	return &sharedDataManager{
 		clientCache: clientCache,
 		myself:      myself,
+		cb:          cb,
 		ctx:         ctx.NewCtx("SharedDataManager"),
 		data:        make(map[SharedDataId]SharedDataProxy),
 	}
 }
 
 func (sdm *sharedDataManager) OnSharedDataRequest(writer http.ResponseWriter, req *http.Request) {
-	sdm.ctx.Warn().Msgf("OnSharedDataRequest - %v", req.RequestURI)
+	log := sdm.ctx.NewCtx("OnSharedDataRequest")
+	sdm.ctx.Info().Str("uri", req.RequestURI).Msg("request")
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -57,15 +59,26 @@ func (sdm *sharedDataManager) OnSharedDataRequest(writer http.ResponseWriter, re
 		req := &pb.SharedDataInvite{}
 		proto.Unmarshal(body, req)
 		// We were invite to this shared data, make sure the CB knows
-
-		// If we accept then we will create the object
-
-		sd := NewSharedData(common.NewContactFromPB(req.Creator), SharedDataId(req.SharedDataId))
+		creator := common.NewContactFromPB(req.Creator)
+		sd := NewSharedData(creator, SharedDataId(req.SharedDataId))
 		sd.SetMe(req.As)
 
-		sdm.data[sd.GetId()] = NewSharedDataProxy(sd, sdm)
+		// If we accept then we will create the object
+		if sdm.cb.OnInvited(sd, req.As, creator) {
+			sdm.data[sd.GetId()] = NewSharedDataProxy(sd, sdm)
+			resp = &pb.SharedDataInviteResponse{Accepted: true}
+		} else {
+			resp = &pb.SharedDataInviteResponse{Accepted: false}
+		}
+	case "/shareddata/create":
+		req := &pb.SharedDataCreate{}
+		proto.Unmarshal(body, req)
 
-		resp = &pb.SharedDataInviteResponse{}
+		id := SharedDataId(req.SharedDataId)
+
+		sdm.data[id].GetOrigin().Create(req.Key, req.Value, req.Owner, req.Visibility)
+
+		resp = &pb.SharedDataCreateResponse{}
 	case "/shareddata/set":
 		req := &pb.SharedDataSet{}
 		proto.Unmarshal(body, req)
@@ -91,7 +104,7 @@ func (sdm *sharedDataManager) OnSharedDataRequest(writer http.ResponseWriter, re
 
 		resp = &pb.SharedDataChangeOwnerResponse{}
 	default:
-		sdm.ctx.Error().Msgf("Unsupported shared data command: %s", req.RequestURI)
+		log.Error().Msgf("Unsupported shared data command: %s", req.RequestURI)
 	}
 
 	if resp != nil {
@@ -114,7 +127,7 @@ func (sdm *sharedDataManager) GetMe() common.Contact {
 }
 
 func (sdm *sharedDataManager) Serve(s SharedData) SharedData {
-	sdm.ctx.Info().Msg("Server")
+	// log := sdm.ctx.NewCtx("Serve")
 	sdm.lock.Lock()
 	defer sdm.lock.Unlock()
 
@@ -127,7 +140,7 @@ func (sdm *sharedDataManager) Serve(s SharedData) SharedData {
 }
 
 func (sdm *sharedDataManager) JoinShare(s SharedData) {
-	sdm.ctx.Info().Msg("JoinShare")
+	// log := sdm.ctx.NewCtx("JoinShare")
 	sdm.lock.Lock()
 	defer sdm.lock.Unlock()
 
@@ -136,7 +149,7 @@ func (sdm *sharedDataManager) JoinShare(s SharedData) {
 }
 
 func (sdm *sharedDataManager) LeaveShare(s SharedData) {
-	sdm.ctx.Info().Msg("LeaveShare")
+	// log := sdm.ctx.NewCtx("LeaveShare")
 
 	sdm.lock.Lock()
 	defer sdm.lock.Unlock()
@@ -146,7 +159,7 @@ func (sdm *sharedDataManager) LeaveShare(s SharedData) {
 }
 
 func (sdm *sharedDataManager) Invite(s SharedData, recipient common.Contact, as string) bool {
-	sdm.ctx.Info().Msg("Invite")
+	log := sdm.ctx.NewCtx("Invite")
 
 	sdm.lock.Lock()
 	defer sdm.lock.Unlock()
@@ -166,8 +179,18 @@ func (sdm *sharedDataManager) Invite(s SharedData, recipient common.Contact, as 
 		return false
 	}
 
-	proxy := sdm.data[s.GetId()]
-	proxy.AddInvitee(recipient, as)
+	if gresp.Accepted {
+		proxy := sdm.data[s.GetId()]
+		sdm.ctx.Info().Msgf("Add Invitee %v", recipient)
+		proxy.AddInvitee(recipient, as)
 
-	return true
+		sdm.ctx.Info().Msgf("Send State %v", recipient)
+		proxy.SendStateTo(recipient)
+
+		sdm.ctx.Info().Msgf("Invite Accepted by %v", recipient)
+		sdm.cb.OnInviteAccepted(proxy, recipient)
+		return true
+	}
+
+	return false
 }

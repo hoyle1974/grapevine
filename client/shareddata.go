@@ -1,6 +1,8 @@
 package client
 
 import (
+	"fmt"
+
 	"github.com/hoyle1974/grapevine/common"
 )
 
@@ -18,7 +20,7 @@ func (s SearchId) String() string {
 type ClientCallback interface {
 	OnSearch(id SearchId, query string) bool
 	OnSearchResult(id SearchId, result string, contact common.Contact)
-	OnInvited(sharedData SharedData, me string, contact common.Contact)
+	OnInvited(sharedData SharedData, me string, contact common.Contact) bool
 	OnInviteAccepted(sharedData SharedData, contact common.Contact)
 }
 
@@ -36,6 +38,7 @@ type SharedData interface {
 	IsMe(string) bool
 	OnDataChangeCB(func(key string))
 	ChangeDataOwner(key string, owner string)
+	GetData() map[string]data
 }
 
 type data struct {
@@ -56,6 +59,10 @@ func NewSharedData(creator common.Contact, id SharedDataId) SharedData {
 	return &sharedData{id: id, creator: creator, data: make(map[string]data)}
 }
 
+func (s *sharedData) GetData() map[string]data {
+	return s.data
+}
+
 func (s *sharedData) IsProxy() bool {
 	return false
 }
@@ -69,10 +76,12 @@ func (s *sharedData) GetId() SharedDataId {
 }
 
 func (s *sharedData) Create(key string, value interface{}, owner string, visibility string) {
+	fmt.Printf("CREATE %v:%v  (%v:%v)\n", key, value, owner, visibility)
 	s.data[key] = data{value, owner, visibility}
 }
 
 func (s *sharedData) Set(key string, value interface{}) {
+	fmt.Printf("Set %v:%v \n", key, value)
 	d, ok := s.data[key]
 	if !ok {
 		return
@@ -87,6 +96,8 @@ func (s *sharedData) Get(key string) interface{} {
 }
 
 func (s *sharedData) Append(key string, value interface{}) {
+	fmt.Printf("Append %v:%v \n", key, value)
+
 	d, ok := s.data[key]
 	if !ok {
 		return
@@ -109,12 +120,8 @@ func (s *sharedData) GetMe() string {
 }
 
 func (s *sharedData) IsMe(other string) bool {
-	if s.me == other {
-		return true
-	}
-
 	// TODO am I in this group?  is this a group?
-	return false
+	return s.me == other
 }
 
 func (s *sharedData) OnDataChangeCB(cb func(string)) {
@@ -122,6 +129,8 @@ func (s *sharedData) OnDataChangeCB(cb func(string)) {
 }
 
 func (s *sharedData) ChangeDataOwner(key string, owner string) {
+	fmt.Printf("ChangeDataOwner %v:%v \n", key, owner)
+
 	data, ok := s.data[key]
 	if !ok {
 		return

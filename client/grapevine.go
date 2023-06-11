@@ -73,7 +73,7 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 	g.clientCache = NewGrapevineClientCache()
 	g.listener.SetClientCache(g.clientCache)
 
-	g.sharedDataManager = NewSharedDataManager(ctx, g.listener, g.clientCache)
+	g.sharedDataManager = NewSharedDataManager(ctx, g.listener, g.cb, g.clientCache)
 	g.listener.SetSharedDataManager(g.sharedDataManager)
 
 	g.gossip = NewGossip(ctx, common.NewAddress(ip, port))

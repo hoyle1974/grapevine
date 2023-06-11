@@ -12,6 +12,7 @@ type SharedDataProxy interface {
 	SharedData
 	GetOrigin() SharedData
 	AddInvitee(recipient common.Contact, as string)
+	SendStateTo(recipient common.Contact)
 }
 
 func NewSharedDataProxy(origin SharedData, sdm *sharedDataManager) SharedDataProxy {
@@ -25,6 +26,28 @@ func NewSharedDataProxy(origin SharedData, sdm *sharedDataManager) SharedDataPro
 		sdm:      sdm,
 		invities: make(map[string]common.Contact),
 	}
+}
+
+func (p *sharedDataProxy) SendStateTo(recipient common.Contact) {
+	p.lock.Lock()
+	defer p.lock.Unlock()
+
+	for key, value := range p.GetOrigin().GetData() {
+		req := pb.SharedDataCreate{
+			SharedDataId: string(p.origin.GetId()),
+			Originator:   p.sdm.GetMe().ToPB(),
+			Key:          key,
+			Value:        fmt.Sprintf("%v", value.value),
+			Owner:        value.owner,
+			Visibility:   value.visibility,
+		}
+		resp := pb.SharedDataCreateResponse{}
+		err := p.sdm.clientCache.POST(recipient.Address, "/shareddata/create", &req, &resp)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 }
 
 func (p *sharedDataProxy) AddInvitee(recipient common.Contact, as string) {
@@ -43,6 +66,10 @@ type sharedDataProxy struct {
 
 func (p *sharedDataProxy) GetOrigin() SharedData {
 	return p.origin
+}
+
+func (s *sharedDataProxy) GetData() map[string]data {
+	return s.origin.GetData()
 }
 
 func (p *sharedDataProxy) IsProxy() bool {

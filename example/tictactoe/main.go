@@ -164,11 +164,13 @@ func getInput() (string, string) {
 	return temp[0], temp[1]
 }
 
-func doMove(move string, board string, piece string) string {
+func doMove(move string, board string, piece string) (string, error) {
 	idx, err := strconv.Atoi(move)
 	if err != nil {
-		fmt.Println(err)
-		return board
+		return board, err
+	}
+	if board[idx] != '.' {
+		return board, fmt.Errorf("Illegal move")
 	}
 	a := ""
 	b := piece
@@ -179,7 +181,7 @@ func doMove(move string, board string, piece string) string {
 	c = board[idx+1:]
 
 	fmt.Printf("A[%v] B[%v] C[%v]\n", a, b, c)
-	return a + b + c
+	return a + b + c, nil
 }
 
 func myPiece(player string) string {
@@ -271,7 +273,11 @@ func (c *Callback) play() {
 			// Make a move
 			b := c.sharedData.Get("board").(string)
 			fmt.Printf("Board Was: [%v]\n", b)
-			b = doMove(extra, b, piece)
+			b, err := doMove(extra, b, piece)
+			if err != nil {
+				log.Info().Msgf("Error with move: %v", err)
+				continue
+			}
 			fmt.Printf(" Board Is: [%v]\n", b)
 
 			c.sharedData.Set("board", b)

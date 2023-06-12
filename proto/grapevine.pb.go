@@ -1248,6 +1248,178 @@ func (*SharedDataChangeOwnerResponse) Descriptor() ([]byte, []int) {
 	return file_proto_grapevine_proto_rawDescGZIP(), []int{23}
 }
 
+type SharedDataData struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Value     string `protobuf:"bytes,1,opt,name=value,proto3" json:"value,omitempty"`
+	Owner     string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
+	Visbility string `protobuf:"bytes,3,opt,name=visbility,proto3" json:"visbility,omitempty"`
+}
+
+func (x *SharedDataData) Reset() {
+	*x = SharedDataData{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_proto_grapevine_proto_msgTypes[24]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SharedDataData) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SharedDataData) ProtoMessage() {}
+
+func (x *SharedDataData) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_grapevine_proto_msgTypes[24]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SharedDataData.ProtoReflect.Descriptor instead.
+func (*SharedDataData) Descriptor() ([]byte, []int) {
+	return file_proto_grapevine_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *SharedDataData) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *SharedDataData) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
+}
+
+func (x *SharedDataData) GetVisbility() string {
+	if x != nil {
+		return x.Visbility
+	}
+	return ""
+}
+
+type SharedDataSendState struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	SharedDataId string                     `protobuf:"bytes,1,opt,name=sharedDataId,proto3" json:"sharedDataId,omitempty"`
+	Originator   *UserContact               `protobuf:"bytes,2,opt,name=originator,proto3" json:"originator,omitempty"`
+	Data         map[string]*SharedDataData `protobuf:"bytes,3,rep,name=data,proto3" json:"data,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Listeners    map[string]*UserContact    `protobuf:"bytes,4,rep,name=listeners,proto3" json:"listeners,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+}
+
+func (x *SharedDataSendState) Reset() {
+	*x = SharedDataSendState{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_proto_grapevine_proto_msgTypes[25]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SharedDataSendState) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SharedDataSendState) ProtoMessage() {}
+
+func (x *SharedDataSendState) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_grapevine_proto_msgTypes[25]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SharedDataSendState.ProtoReflect.Descriptor instead.
+func (*SharedDataSendState) Descriptor() ([]byte, []int) {
+	return file_proto_grapevine_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *SharedDataSendState) GetSharedDataId() string {
+	if x != nil {
+		return x.SharedDataId
+	}
+	return ""
+}
+
+func (x *SharedDataSendState) GetOriginator() *UserContact {
+	if x != nil {
+		return x.Originator
+	}
+	return nil
+}
+
+func (x *SharedDataSendState) GetData() map[string]*SharedDataData {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *SharedDataSendState) GetListeners() map[string]*UserContact {
+	if x != nil {
+		return x.Listeners
+	}
+	return nil
+}
+
+type SharedDataSendStateResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *SharedDataSendStateResponse) Reset() {
+	*x = SharedDataSendStateResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_proto_grapevine_proto_msgTypes[26]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SharedDataSendStateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SharedDataSendStateResponse) ProtoMessage() {}
+
+func (x *SharedDataSendStateResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_grapevine_proto_msgTypes[26]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SharedDataSendStateResponse.ProtoReflect.Descriptor instead.
+func (*SharedDataSendStateResponse) Descriptor() ([]byte, []int) {
+	return file_proto_grapevine_proto_rawDescGZIP(), []int{26}
+}
+
 var File_proto_grapevine_proto protoreflect.FileDescriptor
 
 var file_proto_grapevine_proto_rawDesc = []byte{
@@ -1365,7 +1537,40 @@ var file_proto_grapevine_proto_rawDesc = []byte{
 	0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72,
 	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x22, 0x1f, 0x0a,
 	0x1d, 0x53, 0x68, 0x61, 0x72, 0x65, 0x64, 0x44, 0x61, 0x74, 0x61, 0x43, 0x68, 0x61, 0x6e, 0x67,
-	0x65, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xce,
+	0x65, 0x4f, 0x77, 0x6e, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5a,
+	0x0a, 0x0e, 0x53, 0x68, 0x61, 0x72, 0x65, 0x64, 0x44, 0x61, 0x74, 0x61, 0x44, 0x61, 0x74, 0x61,
+	0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x1c, 0x0a, 0x09,
+	0x76, 0x69, 0x73, 0x62, 0x69, 0x6c, 0x69, 0x74, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x09, 0x76, 0x69, 0x73, 0x62, 0x69, 0x6c, 0x69, 0x74, 0x79, 0x22, 0x92, 0x03, 0x0a, 0x13, 0x53,
+	0x68, 0x61, 0x72, 0x65, 0x64, 0x44, 0x61, 0x74, 0x61, 0x53, 0x65, 0x6e, 0x64, 0x53, 0x74, 0x61,
+	0x74, 0x65, 0x12, 0x22, 0x0a, 0x0c, 0x73, 0x68, 0x61, 0x72, 0x65, 0x64, 0x44, 0x61, 0x74, 0x61,
+	0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x73, 0x68, 0x61, 0x72, 0x65, 0x64,
+	0x44, 0x61, 0x74, 0x61, 0x49, 0x64, 0x12, 0x32, 0x0a, 0x0a, 0x6f, 0x72, 0x69, 0x67, 0x69, 0x6e,
+	0x61, 0x74, 0x6f, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x43, 0x6f, 0x6e, 0x74, 0x61, 0x63, 0x74, 0x52, 0x0a,
+	0x6f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x38, 0x0a, 0x04, 0x64, 0x61,
+	0x74, 0x61, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x2e, 0x53, 0x68, 0x61, 0x72, 0x65, 0x64, 0x44, 0x61, 0x74, 0x61, 0x53, 0x65, 0x6e, 0x64, 0x53,
+	0x74, 0x61, 0x74, 0x65, 0x2e, 0x44, 0x61, 0x74, 0x61, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x04,
+	0x64, 0x61, 0x74, 0x61, 0x12, 0x47, 0x0a, 0x09, 0x6c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x65, 0x72,
+	0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x29, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
+	0x53, 0x68, 0x61, 0x72, 0x65, 0x64, 0x44, 0x61, 0x74, 0x61, 0x53, 0x65, 0x6e, 0x64, 0x53, 0x74,
+	0x61, 0x74, 0x65, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x65, 0x72, 0x73, 0x45, 0x6e, 0x74,
+	0x72, 0x79, 0x52, 0x09, 0x6c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x65, 0x72, 0x73, 0x1a, 0x4e, 0x0a,
+	0x09, 0x44, 0x61, 0x74, 0x61, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65,
+	0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x2b, 0x0a, 0x05,
+	0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x68, 0x61, 0x72, 0x65, 0x64, 0x44, 0x61, 0x74, 0x61, 0x44, 0x61,
+	0x74, 0x61, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x1a, 0x50, 0x0a,
+	0x0e, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x65, 0x72, 0x73, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12,
+	0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65,
+	0x79, 0x12, 0x28, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x12, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x55, 0x73, 0x65, 0x72, 0x43, 0x6f, 0x6e,
+	0x74, 0x61, 0x63, 0x74, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22,
+	0x1d, 0x0a, 0x1b, 0x53, 0x68, 0x61, 0x72, 0x65, 0x64, 0x44, 0x61, 0x74, 0x61, 0x53, 0x65, 0x6e,
+	0x64, 0x53, 0x74, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xce,
 	0x03, 0x0a, 0x10, 0x47, 0x72, 0x61, 0x70, 0x65, 0x76, 0x69, 0x6e, 0x65, 0x53, 0x65, 0x72, 0x76,
 	0x69, 0x63, 0x65, 0x12, 0x35, 0x0a, 0x06, 0x47, 0x6f, 0x73, 0x73, 0x69, 0x70, 0x12, 0x14, 0x2e,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x47, 0x6f, 0x73, 0x73, 0x69, 0x70, 0x52, 0x65, 0x71, 0x75,
@@ -1412,7 +1617,7 @@ func file_proto_grapevine_proto_rawDescGZIP() []byte {
 	return file_proto_grapevine_proto_rawDescData
 }
 
-var file_proto_grapevine_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
+var file_proto_grapevine_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_proto_grapevine_proto_goTypes = []interface{}{
 	(*Search)(nil),                        // 0: proto.Search
 	(*SearchResultRequest)(nil),           // 1: proto.SearchResultRequest
@@ -1438,39 +1643,49 @@ var file_proto_grapevine_proto_goTypes = []interface{}{
 	(*SharedDataAppendResponse)(nil),      // 21: proto.SharedDataAppendResponse
 	(*SharedDataChangeOwner)(nil),         // 22: proto.SharedDataChangeOwner
 	(*SharedDataChangeOwnerResponse)(nil), // 23: proto.SharedDataChangeOwnerResponse
-	(*UserContact)(nil),                   // 24: proto.UserContact
-	(*timestamppb.Timestamp)(nil),         // 25: google.protobuf.Timestamp
+	(*SharedDataData)(nil),                // 24: proto.SharedDataData
+	(*SharedDataSendState)(nil),           // 25: proto.SharedDataSendState
+	(*SharedDataSendStateResponse)(nil),   // 26: proto.SharedDataSendStateResponse
+	nil,                                   // 27: proto.SharedDataSendState.DataEntry
+	nil,                                   // 28: proto.SharedDataSendState.ListenersEntry
+	(*UserContact)(nil),                   // 29: proto.UserContact
+	(*timestamppb.Timestamp)(nil),         // 30: google.protobuf.Timestamp
 }
 var file_proto_grapevine_proto_depIdxs = []int32{
-	24, // 0: proto.Search.requestor:type_name -> proto.UserContact
-	24, // 1: proto.SearchResultRequest.responder:type_name -> proto.UserContact
-	24, // 2: proto.SearchResultResponse.responder:type_name -> proto.UserContact
-	25, // 3: proto.Gossip.endOfLife:type_name -> google.protobuf.Timestamp
+	29, // 0: proto.Search.requestor:type_name -> proto.UserContact
+	29, // 1: proto.SearchResultRequest.responder:type_name -> proto.UserContact
+	29, // 2: proto.SearchResultResponse.responder:type_name -> proto.UserContact
+	30, // 3: proto.Gossip.endOfLife:type_name -> google.protobuf.Timestamp
 	0,  // 4: proto.Gossip.search:type_name -> proto.Search
 	3,  // 5: proto.GossipRequest.gossip:type_name -> proto.Gossip
 	3,  // 6: proto.GossipResponse.gossip:type_name -> proto.Gossip
-	24, // 7: proto.SharedDataInvite.creator:type_name -> proto.UserContact
-	24, // 8: proto.SharedDataCreate.originator:type_name -> proto.UserContact
-	24, // 9: proto.SharedDataSet.originator:type_name -> proto.UserContact
-	24, // 10: proto.SharedDataAppend.originator:type_name -> proto.UserContact
-	24, // 11: proto.SharedDataChangeOwner.originator:type_name -> proto.UserContact
-	4,  // 12: proto.GrapevineService.Gossip:input_type -> proto.GossipRequest
-	1,  // 13: proto.GrapevineService.SearchResult:input_type -> proto.SearchResultRequest
-	6,  // 14: proto.GrapevineService.SharedInvitation:input_type -> proto.SharedInvitationRequest
-	8,  // 15: proto.GrapevineService.ChangeDataOwner:input_type -> proto.ChangeDataOwnerRequest
-	10, // 16: proto.GrapevineService.ChangeData:input_type -> proto.ChangeDataRequest
-	12, // 17: proto.GrapevineService.LeaveSharedData:input_type -> proto.LeaveSharedDataRequest
-	5,  // 18: proto.GrapevineService.Gossip:output_type -> proto.GossipResponse
-	2,  // 19: proto.GrapevineService.SearchResult:output_type -> proto.SearchResultResponse
-	7,  // 20: proto.GrapevineService.SharedInvitation:output_type -> proto.SharedInvitationResponse
-	9,  // 21: proto.GrapevineService.ChangeDataOwner:output_type -> proto.ChangeDataOwnerResponse
-	11, // 22: proto.GrapevineService.ChangeData:output_type -> proto.ChangeDataResponse
-	13, // 23: proto.GrapevineService.LeaveSharedData:output_type -> proto.LeaveSharedDataResponse
-	18, // [18:24] is the sub-list for method output_type
-	12, // [12:18] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	29, // 7: proto.SharedDataInvite.creator:type_name -> proto.UserContact
+	29, // 8: proto.SharedDataCreate.originator:type_name -> proto.UserContact
+	29, // 9: proto.SharedDataSet.originator:type_name -> proto.UserContact
+	29, // 10: proto.SharedDataAppend.originator:type_name -> proto.UserContact
+	29, // 11: proto.SharedDataChangeOwner.originator:type_name -> proto.UserContact
+	29, // 12: proto.SharedDataSendState.originator:type_name -> proto.UserContact
+	27, // 13: proto.SharedDataSendState.data:type_name -> proto.SharedDataSendState.DataEntry
+	28, // 14: proto.SharedDataSendState.listeners:type_name -> proto.SharedDataSendState.ListenersEntry
+	24, // 15: proto.SharedDataSendState.DataEntry.value:type_name -> proto.SharedDataData
+	29, // 16: proto.SharedDataSendState.ListenersEntry.value:type_name -> proto.UserContact
+	4,  // 17: proto.GrapevineService.Gossip:input_type -> proto.GossipRequest
+	1,  // 18: proto.GrapevineService.SearchResult:input_type -> proto.SearchResultRequest
+	6,  // 19: proto.GrapevineService.SharedInvitation:input_type -> proto.SharedInvitationRequest
+	8,  // 20: proto.GrapevineService.ChangeDataOwner:input_type -> proto.ChangeDataOwnerRequest
+	10, // 21: proto.GrapevineService.ChangeData:input_type -> proto.ChangeDataRequest
+	12, // 22: proto.GrapevineService.LeaveSharedData:input_type -> proto.LeaveSharedDataRequest
+	5,  // 23: proto.GrapevineService.Gossip:output_type -> proto.GossipResponse
+	2,  // 24: proto.GrapevineService.SearchResult:output_type -> proto.SearchResultResponse
+	7,  // 25: proto.GrapevineService.SharedInvitation:output_type -> proto.SharedInvitationResponse
+	9,  // 26: proto.GrapevineService.ChangeDataOwner:output_type -> proto.ChangeDataOwnerResponse
+	11, // 27: proto.GrapevineService.ChangeData:output_type -> proto.ChangeDataResponse
+	13, // 28: proto.GrapevineService.LeaveSharedData:output_type -> proto.LeaveSharedDataResponse
+	23, // [23:29] is the sub-list for method output_type
+	17, // [17:23] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_proto_grapevine_proto_init() }
@@ -1768,6 +1983,42 @@ func file_proto_grapevine_proto_init() {
 				return nil
 			}
 		}
+		file_proto_grapevine_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SharedDataData); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_proto_grapevine_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SharedDataSendState); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_proto_grapevine_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SharedDataSendStateResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_proto_grapevine_proto_msgTypes[3].OneofWrappers = []interface{}{
 		(*Gossip_Search)(nil),
@@ -1778,7 +2029,7 @@ func file_proto_grapevine_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_proto_grapevine_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   24,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -130,6 +130,22 @@ message SharedDataChangeOwner {
 }
 
 message SharedDataChangeOwnerResponse {
+}
+
+message SharedDataData {
+  string value = 1;
+  string owner = 2;
+  string visbility = 3; 
+}
+
+message SharedDataSendState {
+  string sharedDataId = 1;
+  UserContact originator = 2;
+  map<string, SharedDataData> data = 3;
+  map<string, UserContact> listeners = 4;
+}
+
+message SharedDataSendStateResponse {
   
 }
 

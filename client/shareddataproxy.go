@@ -32,20 +32,31 @@ func (p *sharedDataProxy) SendStateTo(recipient common.Contact) {
 	p.lock.Lock()
 	defer p.lock.Unlock()
 
+	req := pb.SharedDataSendState{
+		SharedDataId: string(p.origin.GetId()),
+		Originator:   p.sdm.GetMe().ToPB(),
+		Data:         make(map[string]*pb.SharedDataData),
+		Listeners:    make(map[string]*pb.UserContact),
+	}
+
 	for key, value := range p.GetOrigin().GetData() {
-		req := pb.SharedDataCreate{
-			SharedDataId: string(p.origin.GetId()),
-			Originator:   p.sdm.GetMe().ToPB(),
-			Key:          key,
-			Value:        fmt.Sprintf("%v", value.value),
-			Owner:        value.owner,
-			Visibility:   value.visibility,
+		data := &pb.SharedDataData{
+			Value:     fmt.Sprintf("%v", value.value),
+			Owner:     value.owner,
+			Visbility: value.visibility,
 		}
-		resp := pb.SharedDataCreateResponse{}
-		err := p.sdm.clientCache.POST(recipient.Address, "/shareddata/create", &req, &resp)
-		if err != nil {
-			panic(err)
-		}
+		req.Data[key] = data
+	}
+
+	for key, value := range p.invities {
+		contact := value.ToPB()
+		req.Listeners[key] = contact
+	}
+
+	resp := pb.SharedDataSendStateResponse{}
+	err := p.sdm.clientCache.POST(recipient.Address, "/shareddata/sendstate", &req, &resp)
+	if err != nil {
+		panic(err)
 	}
 
 }
@@ -99,8 +110,10 @@ func (p *sharedDataProxy) Create(key string, value interface{}, owner string, vi
 		Visibility:   visibility,
 	}
 	resp := pb.SharedDataCreateResponse{}
-	for _, value := range p.invities {
-		p.sdm.clientCache.POST(value.Address, "/shareddata/create", &req, &resp)
+	for key, value := range p.invities {
+		if key != p.GetMe() {
+			p.sdm.clientCache.POST(value.Address, "/shareddata/create", &req, &resp)
+		}
 	}
 }
 
@@ -121,8 +134,10 @@ func (p *sharedDataProxy) Set(key string, value interface{}) {
 		Value:        fmt.Sprintf("%v", value),
 	}
 	resp := pb.SharedDataSetResponse{}
-	for _, value := range p.invities {
-		p.sdm.clientCache.POST(value.Address, "/shareddata/set", &req, &resp)
+	for key, value := range p.invities {
+		if key != p.GetMe() {
+			p.sdm.clientCache.POST(value.Address, "/shareddata/set", &req, &resp)
+		}
 	}
 }
 
@@ -137,8 +152,10 @@ func (p *sharedDataProxy) Append(key string, value interface{}) {
 		Value:        fmt.Sprintf("%v", value),
 	}
 	resp := pb.SharedDataAppendResponse{}
-	for _, value := range p.invities {
-		p.sdm.clientCache.POST(value.Address, "/shareddata/append", &req, &resp)
+	for key, value := range p.invities {
+		if key != p.GetMe() {
+			p.sdm.clientCache.POST(value.Address, "/shareddata/append", &req, &resp)
+		}
 	}
 
 	p.origin.Append(key, value)
@@ -176,8 +193,10 @@ func (p *sharedDataProxy) ChangeDataOwner(key string, owner string) {
 		Owner:        owner,
 	}
 	resp := pb.SharedDataChangeOwnerResponse{}
-	for _, value := range p.invities {
-		p.sdm.clientCache.POST(value.Address, "/shareddata/changeowner", &req, &resp)
+	for key, value := range p.invities {
+		if key != p.GetMe() {
+			p.sdm.clientCache.POST(value.Address, "/shareddata/changeowner", &req, &resp)
+		}
 	}
 
 	p.origin.ChangeDataOwner(key, owner)

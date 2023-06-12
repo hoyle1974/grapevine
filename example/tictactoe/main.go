@@ -71,12 +71,13 @@ func (c *Callback) OnSearchResult(id client.SearchId, query string, contact comm
 	log := c.ctx.NewCtx("OnSearchResult")
 
 	c.lock.Lock()
-	if !c.searching {
-		c.lock.Unlock()
+	defer c.lock.Unlock()
+
+	if c.sharedData != nil {
 		return
 	}
+	log.Info().Msg("We are done searching, let's ask them to join us")
 	c.searching = false
-	c.lock.Unlock()
 
 	log.Info().Msgf("TICTACTOE - Id: %v Query: %v\n", id, query)
 
@@ -101,12 +102,12 @@ func (c *Callback) OnSearchResult(id client.SearchId, query string, contact comm
 }
 
 // Someone has invited us to share data (in our case it's a game
-func (c *Callback) OnInvited(sharedData client.SharedData, me string, contact common.Contact) bool {
+func (c *Callback) OnInvited(sharedDataId client.SharedDataId, me string, contact common.Contact) bool {
 	log := c.ctx.NewCtx("OnInvited")
 
 	c.lock.Lock()
 	defer c.lock.Unlock()
-	log.Info().Msgf("Id: %v Me: %v\n", sharedData.GetId(), me)
+	log.Info().Msgf("Id: %v Me: %v\n", sharedDataId, me)
 
 	if c.sharedData != nil {
 		// Leave any existing share we have, probably not the best choice
@@ -114,11 +115,20 @@ func (c *Callback) OnInvited(sharedData client.SharedData, me string, contact co
 		c.sharedData = nil
 	}
 
+	return true
+}
+
+func (c *Callback) OnSharedDataAvailable(sharedData client.SharedData) {
+	log := c.ctx.NewCtx("OnSharedDataAvailable")
+
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	log.Info().Msgf("Id: %v", sharedData.GetId())
+
 	c.sharedData = sharedData
 
 	go c.play()
 
-	return true
 }
 
 // Someone accepted our invitation to share the data
@@ -164,9 +174,11 @@ func doMove(move string, board string, piece string) string {
 	b := piece
 	c := ""
 	if idx > 0 {
-		a = board[:idx-1]
+		a = board[:idx]
 	}
 	c = board[idx+1:]
+
+	fmt.Printf("A[%v] B[%v] C[%v]\n", a, b, c)
 	return a + b + c
 }
 
@@ -218,9 +230,15 @@ func (c *Callback) play() {
 		}
 	})
 
+	otherPlayer := "player1"
+	piece := myPiece(c.sharedData.GetMe())
+	if c.sharedData.GetMe() == "player1" {
+		otherPlayer = "player2"
+	}
+
 	for {
 		// Wait for our turn to play
-		log.Info().Msgf("TICTACTOE - PLAY 2 You are player %v\n", c.sharedData.GetMe())
+		log.Info().Msgf("TICTACTOE - PLAY 2 You are player %v", c.sharedData.GetMe())
 		for {
 			// Wait till we own the state (this means it's either or turn or the game is over and all game objects are owned by everyone
 			time.Sleep(time.Second)
@@ -228,7 +246,7 @@ func (c *Callback) play() {
 				break
 			}
 		}
-		log.Info().Msgf("TICTACTOE - PLAY 3: State Owner = %v\n", c.sharedData.GetOwner("state"))
+		log.Info().Msgf("TICTACTOE - PLAY 3: State Owner = %v", c.sharedData.GetOwner("state"))
 		msg := ""
 		if c.sharedData.Get("state").(string) == c.sharedData.GetMe() {
 			msg = fmt.Sprintf("(%v)\nYour turn, make a move or chat:", c.sharedData.GetId())
@@ -251,8 +269,12 @@ func (c *Callback) play() {
 			}
 
 			// Make a move
-			piece := myPiece(c.sharedData.GetMe())
-			c.sharedData.Set("board", doMove(extra, c.sharedData.Get("board").(string), piece))
+			b := c.sharedData.Get("board").(string)
+			fmt.Printf("Board Was: [%v]\n", b)
+			b = doMove(extra, b, piece)
+			fmt.Printf(" Board Is: [%v]\n", b)
+
+			c.sharedData.Set("board", b)
 			if didIWin(c.sharedData.Get("board").(string), piece) {
 				c.sharedData.Set("state", "finished")
 				c.sharedData.ChangeDataOwner("board", "default")
@@ -260,11 +282,11 @@ func (c *Callback) play() {
 				log.Info().Msgf("You won!")
 			} else {
 				// Other player can move
-				c.sharedData.Set("state", "player2")
+				c.sharedData.Set("state", otherPlayer)
 			}
 
-			c.sharedData.ChangeDataOwner("board", "player2")
-			c.sharedData.ChangeDataOwner("state", "player2")
+			c.sharedData.ChangeDataOwner("board", otherPlayer)
+			c.sharedData.ChangeDataOwner("state", otherPlayer)
 		} else if input == "leave" {
 			c.grapevine.LeaveShare(c.sharedData)
 		}

@@ -246,6 +246,7 @@ func (g *grapevineListener) Listen(ip net.IP) (int, error) {
 	mux.HandleFunc("/shareddata/changeowner", g.onSharedData)
 	mux.HandleFunc("/shareddata/set", g.onSharedData)
 	mux.HandleFunc("/shareddata/append", g.onSharedData)
+	mux.HandleFunc("/shareddata/sendstate", g.onSharedData)
 	// mux.HandleFunc("/data/invite", g.gossip)
 	// mux.HandleFunc("/data/change/owner", g.gossip)
 	// mux.HandleFunc("/data/change/data", g.gossip)

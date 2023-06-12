@@ -60,16 +60,35 @@ func (sdm *sharedDataManager) OnSharedDataRequest(writer http.ResponseWriter, re
 		proto.Unmarshal(body, req)
 		// We were invite to this shared data, make sure the CB knows
 		creator := common.NewContactFromPB(req.Creator)
-		sd := NewSharedData(creator, SharedDataId(req.SharedDataId))
-		sd.SetMe(req.As)
 
 		// If we accept then we will create the object
-		if sdm.cb.OnInvited(sd, req.As, creator) {
-			sdm.data[sd.GetId()] = NewSharedDataProxy(sd, sdm)
+		if sdm.cb.OnInvited(SharedDataId(req.SharedDataId), req.As, creator) {
+			sd := NewSharedData(creator, SharedDataId(req.SharedDataId))
+			sd.SetMe(req.As)
+			proxy := NewSharedDataProxy(sd, sdm)
+			proxy.AddInvitee(sdm.GetMe(), req.As)
+			sdm.data[sd.GetId()] = proxy
 			resp = &pb.SharedDataInviteResponse{Accepted: true}
+
+			sdm.cb.OnSharedDataAvailable(proxy)
 		} else {
 			resp = &pb.SharedDataInviteResponse{Accepted: false}
 		}
+	case "/shareddata/sendstate":
+		req := &pb.SharedDataSendState{}
+		proto.Unmarshal(body, req)
+
+		id := SharedDataId(req.SharedDataId)
+		sd := sdm.data[id]
+
+		for key, value := range req.Data {
+			sd.Create(key, value.Value, value.Owner, value.Visbility)
+		}
+
+		for key, value := range req.Listeners {
+			sd.AddInvitee(common.NewContactFromPB(value), key)
+		}
+		resp = &pb.SharedDataSendStateResponse{}
 	case "/shareddata/create":
 		req := &pb.SharedDataCreate{}
 		proto.Unmarshal(body, req)
@@ -132,6 +151,7 @@ func (sdm *sharedDataManager) Serve(s SharedData) SharedData {
 	defer sdm.lock.Unlock()
 
 	proxy := NewSharedDataProxy(s, sdm)
+	proxy.AddInvitee(sdm.GetMe(), s.GetMe())
 
 	// Add this shared data to our system
 	sdm.data[s.GetId()] = proxy
@@ -188,7 +208,7 @@ func (sdm *sharedDataManager) Invite(s SharedData, recipient common.Contact, as 
 		proxy.SendStateTo(recipient)
 
 		sdm.ctx.Info().Msgf("Invite Accepted by %v", recipient)
-		sdm.cb.OnInviteAccepted(proxy, recipient)
+		go sdm.cb.OnInviteAccepted(proxy, recipient)
 		return true
 	}
 

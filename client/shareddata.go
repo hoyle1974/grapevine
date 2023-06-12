@@ -1,8 +1,6 @@
 package client
 
 import (
-	"fmt"
-
 	"github.com/hoyle1974/grapevine/common"
 )
 
@@ -77,12 +75,12 @@ func (s *sharedData) GetId() SharedDataId {
 }
 
 func (s *sharedData) Create(key string, value interface{}, owner string, visibility string) {
-	fmt.Printf("%v) CREATE %v:%v  (%v:%v)\n", s.id, key, value, owner, visibility)
+	// fmt.Printf("%v) CREATE %v:%v  (%v:%v)\n", s.id, key, value, owner, visibility)
 	s.data[key] = data{value, owner, visibility}
 }
 
 func (s *sharedData) Set(key string, value interface{}) {
-	fmt.Printf("Set %v:%v \n", key, value)
+	// fmt.Printf("Set %v:%v \n", key, value)
 	d, ok := s.data[key]
 	if !ok {
 		return
@@ -97,7 +95,7 @@ func (s *sharedData) Get(key string) interface{} {
 }
 
 func (s *sharedData) Append(key string, value interface{}) {
-	fmt.Printf("%v) Append %v:%v \n", s.id, key, value)
+	// fmt.Printf("%v) Append %v:%v \n", s.id, key, value)
 
 	d, ok := s.data[key]
 	if !ok {
@@ -130,18 +128,18 @@ func (s *sharedData) OnDataChangeCB(cb func(string)) {
 }
 
 func (s *sharedData) ChangeDataOwner(key string, owner string) {
-	fmt.Printf("%v) @@@ ChangeDataOwner %v:%v \n", s.id, key, owner)
+	// fmt.Printf("%v) @@@ ChangeDataOwner %v:%v \n", s.id, key, owner)
 
 	data, ok := s.data[key]
 	if !ok {
-		fmt.Printf("%v) @@@ ChangeDataOwner Could not find key %v\n", s.id, key)
+		// fmt.Printf("%v) @@@ ChangeDataOwner Could not find key %v\n", s.id, key)
 		return
 	}
 	// if data.owner != s.me {
 	// 	panic(fmt.Sprintf("@@@ Tried to change owner of key(%v) from (%v) to (%v), I am %v", key, data.owner, owner, s.me))
 	// 	// return
 	// }
-	fmt.Printf("%v) @@@ ChangeDataOwner owner for key(%v) changed from %v to %v\n", s.id, key, data.owner, owner)
+	// fmt.Printf("%v) @@@ ChangeDataOwner owner for key(%v) changed from %v to %v\n", s.id, key, data.owner, owner)
 	data.owner = owner
 	s.data[key] = data
 }

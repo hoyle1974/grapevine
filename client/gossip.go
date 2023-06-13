@@ -13,6 +13,7 @@ type Gossip interface {
 	AddToGossip(rumor Rumor)
 	GossipLoop(clientCache GrapevineClientCache)
 	AddServer(addr common.Address)
+	GetMongers() []common.Address
 }
 
 type gossip struct {
@@ -31,6 +32,10 @@ func NewGossip(ctx CallCtx, self common.Address) Gossip {
 		mongers: NewGossipMongers(ctx, self),
 		rumors:  NewRumors(ctx),
 	}
+}
+
+func (g *gossip) GetMongers() []common.Address {
+	return g.mongers.GetMongers()
 }
 
 func (g *gossip) AddServer(addr common.Address) {

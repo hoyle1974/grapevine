@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"math/rand"
 	"net"
 	"os"
 	"strconv"
@@ -18,7 +17,6 @@ import (
 
 	"github.com/hoyle1974/grapevine/client"
 	"github.com/hoyle1974/grapevine/common"
-	"github.com/rivo/tview"
 )
 
 func GetOutboundIP(ctx client.CallCtx) net.IP {
@@ -43,9 +41,14 @@ type Callback struct {
 	searching  bool
 	sharedData client.SharedData
 	grapevine  client.Grapevine
+	gp         Gameplay
 }
 
 const gameType = "grapevine.com/game/example/tictactoe/v1"
+
+type Gameplay interface {
+	SetPrompt(prompt string)
+}
 
 // Someone is searching for this query
 func (c *Callback) OnSearch(id client.SearchId, query string) bool {
@@ -54,7 +57,7 @@ func (c *Callback) OnSearch(id client.SearchId, query string) bool {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	if !c.searching {
-		// fmt.Println("TICTACTOE - We are done searching!")
+		log.Info().Msg("TICTACTOE - We are done searching!")
 		return false // We are done searching
 	}
 	if query == gameType {
@@ -126,7 +129,7 @@ func (c *Callback) OnSharedDataAvailable(sharedData client.SharedData) {
 
 	c.sharedData = sharedData
 
-	go c.play()
+	go c.play(c.gp)
 
 }
 
@@ -147,11 +150,10 @@ func (c *Callback) OnInviteAccepted(sharedData client.SharedData, contact common
 	log.Info().Msgf("Player %v has joined", contact.AccountId)
 	c.sharedData.Set("state", "player1")
 
-	go c.play()
+	go c.play(c.gp)
 }
 
 func getInput() (string, string) {
-	fmt.Printf("Input (chat <msg> or move <int>)>")
 	reader := bufio.NewReader(os.Stdin)
 	text, _ := reader.ReadString('\n')
 
@@ -179,7 +181,6 @@ func doMove(move string, board string, piece string) (string, error) {
 	}
 	c = board[idx+1:]
 
-	fmt.Printf("A[%v] B[%v] C[%v]\n", a, b, c)
 	return a + b + c, nil
 }
 
@@ -220,7 +221,7 @@ func didIWin(board string, piece string) bool {
 	return false
 }
 
-func (c *Callback) play() {
+func (c *Callback) play(gp Gameplay) {
 	log := c.ctx.NewCtx("play")
 
 	log.Info().Msgf("TICTACTOE - PLAY 1")
@@ -256,7 +257,7 @@ func (c *Callback) play() {
 		} else {
 			msg = fmt.Sprintf("(%v)\nGame is over, you may still chat:", c.sharedData.GetId())
 		}
-		fmt.Println(msg)
+		gp.SetPrompt(msg)
 
 		// Take a turn, blocking on input
 		input, extra := getInput()
@@ -298,24 +299,10 @@ func (c *Callback) play() {
 	}
 }
 
-type LogAdapter struct {
-	out *tview.TextView
-}
-
-func (l LogAdapter) Write(p []byte) (n int, err error) {
-
-	batch := l.out.BatchWriter()
-	defer batch.Close()
-
-	fmt.Fprint(batch, string(p))
-
-	return len(p), nil
-}
-
 func main() {
 	flag.Parse()
 
-	setTuiApp()
+	gp := setTuiApp()
 
 	ctx := client.NewCallCtxWithApp("tictactoe")
 	ctx.Info().Msg("Flags:")
@@ -329,39 +316,7 @@ func main() {
 	}
 	ctx.Info().Msg("Build Info Version: " + info.Main.Version + " " + info.Main.Sum)
 
-	startGame()
+	grapevine := startGame(gp)
 
-	startTuiApp()
-}
-
-func startGame() {
-	ctx := client.NewCallCtxWithApp("tictactoe")
-
-	cb := &Callback{searching: true, ctx: ctx.NewCtx("Callback")}
-	cb.grapevine = client.NewGrapevine(cb, ctx)
-	ip := GetOutboundIP(ctx)
-	ctx.Info().Msgf("Outbound IP is: %v", ip)
-	port, err := cb.grapevine.Start(ip)
-	if err != nil {
-		ctx.Error().Err(err).Msg("Error starting grapevine")
-	}
-
-	username := fmt.Sprintf("U%d", rand.Int()%1000000)
-	password := "P" + uuid.New().String()
-	ctx.Info().Msgf("Creating account with User %v and Password %v", username, password)
-	err = cb.grapevine.CreateAccount(username, password)
-	if err != nil {
-		ctx.Error().Err(err).Msg("Error creating account")
-		return
-	}
-
-	ctx.Info().Msg("Logging in")
-	accountId, err := cb.grapevine.Login(username, password, ip, port)
-	if err != nil {
-		ctx.Error().Err(err).Msg("Error logging in")
-		return
-	}
-	ctx.Info().Msgf("Logged in to account: %s", accountId.String())
-
-	cb.grapevine.Search(gameType)
+	startTuiApp(grapevine)
 }

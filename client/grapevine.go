@@ -23,6 +23,7 @@ type Grapevine interface {
 	Invite(s SharedData, recipient common.Contact, as string) bool
 	Search(key string) SearchId
 	GetMe() common.Contact
+	GetMongers() []common.Address
 
 	CreateAccount(username string, password string) error
 	Login(username string, password string, ip net.IP, port int) (common.AccountId, error)
@@ -41,6 +42,10 @@ type grapevine struct {
 
 func NewGrapevine(cb ClientCallback, ctx CallCtx) Grapevine {
 	return &grapevine{cb: cb, ctx: ctx}
+}
+
+func (g *grapevine) GetMongers() []common.Address {
+	return g.gossip.GetMongers()
 }
 
 func (g *grapevine) GetMe() common.Contact {

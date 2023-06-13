@@ -12,6 +12,7 @@ type GossipMongers interface {
 	AddMonger(addr common.Address)
 	RemoveMonger(addr common.Address)
 	GetRandomServerAddress() *common.Address
+	GetMongers() []common.Address
 }
 
 type monger struct {
@@ -30,10 +31,23 @@ func NewGossipMongers(ctx CallCtx, self common.Address) GossipMongers {
 	return &gossipMongers{ctx: ctx, mongers: []monger{}, self: self}
 }
 
+func (g *gossipMongers) GetMongers() []common.Address {
+	g.lock.RLock()
+	defer g.lock.RUnlock()
+
+	addresses := []common.Address{}
+
+	for _, m := range g.mongers {
+		addresses = append(addresses, m.serverAddress)
+	}
+
+	return addresses
+}
+
 func (g *gossipMongers) RemoveMonger(addr common.Address) {
-	// log := g.ctx.NewCtx("RemoveMonger")
+	log := g.ctx.NewCtx("RemoveMonger")
 	if g.self.Equal(addr) {
-		// log.Info().Msg("Not adding ourself")
+		log.Info().Msg("Not adding ourself")
 		return
 	}
 
@@ -52,7 +66,7 @@ func (g *gossipMongers) RemoveMonger(addr common.Address) {
 func (g *gossipMongers) AddMonger(addr common.Address) {
 	log := g.ctx.NewCtx("AddMonger")
 	if g.self.Equal(addr) {
-		// log.Info().Msg("Not adding ourself")
+		log.Info().Msg("Not adding ourself")
 		return
 	}
 
@@ -61,7 +75,7 @@ func (g *gossipMongers) AddMonger(addr common.Address) {
 	for idx, m := range g.mongers {
 		// We know about this server, upgrade it's expiry
 		if m.serverAddress.Equal(addr) {
-			// log.Info().Msg("Already know about server, upgrading expiry")
+			log.Info().Msg("Already know about server, upgrading expiry")
 			g.lock.RUnlock()
 			g.lock.Lock()
 			m.expiry = time.Now().Add(time.Hour)
@@ -79,12 +93,12 @@ func (g *gossipMongers) AddMonger(addr common.Address) {
 }
 
 func (g *gossipMongers) GetRandomServerAddress() *common.Address {
-	// log := g.ctx.NewCtx("GetRandomServerAddress")
+	log := g.ctx.NewCtx("GetRandomServerAddress")
 
 	g.lock.RLock()
 	defer g.lock.RUnlock()
 
-	// log.Debug().Msgf("Monger List Size: %d", len(g.mongers))
+	log.Debug().Msgf("Monger List Size: %d", len(g.mongers))
 
 	if len(g.mongers) == 0 {
 		return nil

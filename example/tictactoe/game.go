@@ -8,12 +8,24 @@ import (
 	"github.com/hoyle1974/grapevine/client"
 )
 
+type GameInput interface {
+	Click(x int, y int)
+	Chat(msg string)
+}
+
 var cb *Callback
 
-func startGame(gp Gameplay) client.Grapevine {
+func initGame() *Callback {
 	ctx := client.NewCallCtxWithApp("tictactoe")
 
-	cb = &Callback{searching: true, ctx: ctx.NewCtx("Callback"), gp: gp}
+	cb = &Callback{searching: true, ctx: ctx.NewCtx("Callback")}
+
+	return cb
+}
+
+func startGame(cb *Callback) client.Grapevine {
+	ctx := client.NewCallCtxWithApp("tictactoe")
+
 	cb.grapevine = client.NewGrapevine(cb, ctx)
 	ip := GetOutboundIP(ctx)
 	ctx.Info().Msgf("Outbound IP is: %v", ip)

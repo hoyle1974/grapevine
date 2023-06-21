@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hoyle1974/grapevine/client"
+	"github.com/hoyle1974/grapevine/grapevine"
 	"github.com/rivo/tview"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -133,7 +133,7 @@ func setTuiApp(gi GameInput) Gameplay {
 	return gp
 }
 
-func startTuiApp(grapevine client.Grapevine) {
+func startTuiApp(grapevine grapevine.Grapevine) {
 
 	go func() {
 		for {

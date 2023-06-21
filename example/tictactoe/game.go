@@ -5,8 +5,8 @@ import (
 	"math/rand"
 
 	"github.com/google/uuid"
-	"github.com/hoyle1974/grapevine/client"
 	"github.com/hoyle1974/grapevine/common"
+	"github.com/hoyle1974/grapevine/grapevine"
 )
 
 type GameInput interface {
@@ -24,10 +24,10 @@ func initGame() *Callback {
 	return cb
 }
 
-func startGame(cb *Callback) client.Grapevine {
+func startGame(cb *Callback) grapevine.Grapevine {
 	ctx := common.NewCallCtxWithApp("tictactoe")
 
-	cb.grapevine = client.NewGrapevine(cb, ctx)
+	cb.grapevine = grapevine.NewGrapevine(cb, ctx)
 	ip := GetOutboundIP(ctx)
 	ctx.Info().Msgf("Outbound IP is: %v", ip)
 	port, err := cb.grapevine.Start(ip)

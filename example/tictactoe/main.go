@@ -15,8 +15,8 @@ import (
 
 	"runtime/debug"
 
-	"github.com/hoyle1974/grapevine/client"
 	"github.com/hoyle1974/grapevine/common"
+	"github.com/hoyle1974/grapevine/grapevine"
 	"github.com/hoyle1974/grapevine/shareddata"
 )
 
@@ -41,7 +41,7 @@ type Callback struct {
 	ctx        common.CallCtx
 	searching  bool
 	sharedData shareddata.SharedData
-	grapevine  client.Grapevine
+	grapevine  grapevine.Grapevine
 	gp         Gameplay
 }
 
@@ -53,7 +53,7 @@ type Gameplay interface {
 }
 
 // Someone is searching for this query
-func (c *Callback) OnSearch(id client.SearchId, query string) bool {
+func (c *Callback) OnSearch(id shareddata.SearchId, query string) bool {
 	// log := c.ctx.NewCtx("OnSearch")
 
 	c.lock.Lock()
@@ -71,7 +71,7 @@ func (c *Callback) OnSearch(id client.SearchId, query string) bool {
 }
 
 // We found someone matching our game type search
-func (c *Callback) OnSearchResult(id client.SearchId, query string, contact common.Contact) {
+func (c *Callback) OnSearchResult(id shareddata.SearchId, query string, contact common.Contact) {
 	//log := c.ctx.NewCtx("OnSearchResult")
 
 	c.lock.Lock()
@@ -88,7 +88,7 @@ func (c *Callback) OnSearchResult(id client.SearchId, query string, contact comm
 	me := c.grapevine.GetMe()
 
 	// Let's try starting a game with this client and see if they will accept our invitation
-	c.sharedData = client.NewSharedData(me, client.SharedDataId(uuid.New().String())) // Init the structure
+	c.sharedData = shareddata.NewSharedData(me, shareddata.SharedDataId(uuid.New().String())) // Init the structure
 	c.sharedData.SetMe("player1")
 	c.sharedData.Create("state", "start", c.sharedData.GetMe(), "default")
 	c.sharedData.Create("board", ".........", c.sharedData.GetMe(), "default")
@@ -106,7 +106,7 @@ func (c *Callback) OnSearchResult(id client.SearchId, query string, contact comm
 }
 
 // Someone has invited us to share data (in our case it's a game
-func (c *Callback) OnInvited(sharedDataId client.SharedDataId, me string, contact common.Contact) bool {
+func (c *Callback) OnInvited(sharedDataId shareddata.SharedDataId, me string, contact common.Contact) bool {
 	//log := c.ctx.NewCtx("OnInvited")
 
 	c.lock.Lock()
@@ -122,7 +122,7 @@ func (c *Callback) OnInvited(sharedDataId client.SharedDataId, me string, contac
 	return true
 }
 
-func (c *Callback) OnSharedDataAvailable(sharedData client.SharedData) {
+func (c *Callback) OnSharedDataAvailable(sharedData shareddata.SharedData) {
 	//log := c.ctx.NewCtx("OnSharedDataAvailable")
 
 	c.lock.Lock()
@@ -136,7 +136,7 @@ func (c *Callback) OnSharedDataAvailable(sharedData client.SharedData) {
 }
 
 // Someone accepted our invitation to share the data
-func (c *Callback) OnInviteAccepted(sharedData client.SharedData, contact common.Contact) {
+func (c *Callback) OnInviteAccepted(sharedData shareddata.SharedData, contact common.Contact) {
 	//log := c.ctx.NewCtx("OnInviteAccepted")
 
 	c.lock.Lock()
@@ -341,7 +341,7 @@ func main() {
 
 	gameInput.gp = gp
 
-	ctx := client.NewCallCtxWithApp("tictactoe")
+	ctx := common.NewCallCtxWithApp("tictactoe")
 	ctx.Info().Msg("Flags:")
 	flag.CommandLine.VisitAll(func(flag *flag.Flag) {
 		ctx.Info().Msg(fmt.Sprintf("\t%v:%v", flag.Name, flag.Value))

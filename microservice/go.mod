@@ -4,13 +4,16 @@ go 1.20
 
 require (
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0-rc.2.0.20201002093600-73cf2ae9d891
-	github.com/hoyle1974/grapevine/proto v0.0.0-20230504191720-6d33d68a6962
-	github.com/hoyle1974/grapevine/services v0.0.0-20230504191720-6d33d68a6962
+	github.com/hoyle1974/grapevine/proto v0.0.0-20230621053926-fd2241b6cb16
+	github.com/hoyle1974/grapevine/services v0.0.0-20230621055508-d62babcaa3f8
 	github.com/rs/zerolog v1.29.1
 	google.golang.org/grpc v1.54.0
 )
 
-require golang.org/x/crypto v0.8.0 // indirect
+require (
+	github.com/hoyle1974/grapevine/common v0.0.0-20230610041630-22e069730117 // indirect
+	golang.org/x/crypto v0.8.0 // indirect
+)
 
 require (
 	github.com/golang/protobuf v1.5.2 // indirect

@@ -4,9 +4,9 @@ go 1.20
 
 require (
 	github.com/google/uuid v1.3.0
-	github.com/hoyle1974/grapevine/client v0.0.0-20230613054520-157f51bf0238
-	github.com/hoyle1974/grapevine/common v0.0.0-20230613054520-157f51bf0238
-	github.com/hoyle1974/grapevine/proto v0.0.0-20230504191720-6d33d68a6962
+	github.com/hoyle1974/grapevine/client v0.0.0-20230621055508-d62babcaa3f8
+	github.com/hoyle1974/grapevine/common v0.0.0-20230621055508-d62babcaa3f8
+	github.com/hoyle1974/grapevine/proto v0.0.0-20230621053926-fd2241b6cb16
 	google.golang.org/protobuf v1.28.1
 )
 

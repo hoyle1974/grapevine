@@ -5,8 +5,8 @@ go 1.20
 require (
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
-	github.com/hoyle1974/grapevine/proto v0.0.0-20230504191720-6d33d68a6962
-	github.com/hoyle1974/grapevine/services v0.0.0-20230504191720-6d33d68a6962
+	github.com/hoyle1974/grapevine/proto v0.0.0-20230621053926-fd2241b6cb16
+	github.com/hoyle1974/grapevine/services v0.0.0-20230621055508-d62babcaa3f8
 	github.com/quic-go/quic-go v0.34.0
 	github.com/rs/zerolog v1.29.1
 	google.golang.org/grpc v1.54.0
@@ -17,6 +17,7 @@ require (
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
+	github.com/hoyle1974/grapevine/common v0.0.0-20230610041630-22e069730117 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect

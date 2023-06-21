@@ -11,10 +11,12 @@ require (
 	google.golang.org/grpc v1.54.0
 )
 
+require github.com/hoyle1974/grapevine/proto v0.0.0-20230621053926-fd2241b6cb16 // indirect
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/hoyle1974/grapevine/common v0.0.0-20230610041630-22e069730117
+	github.com/hoyle1974/grapevine/common v0.0.0-20230621055508-d62babcaa3f8
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect

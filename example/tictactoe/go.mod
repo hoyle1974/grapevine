@@ -4,14 +4,16 @@ go 1.20
 
 require (
 	github.com/google/uuid v1.3.0
-	github.com/hoyle1974/grapevine/client v0.0.0-20230522044715-43c547517a58
-	github.com/hoyle1974/grapevine/services v0.0.0-20230522131611-c933b99ecbb3
+	github.com/hoyle1974/grapevine/client v0.0.0-20230621055508-d62babcaa3f8
+	github.com/hoyle1974/grapevine/services v0.0.0-20230621055508-d62babcaa3f8
 	github.com/rs/zerolog v1.29.1
 )
 
 require (
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.6.0 // indirect
+	github.com/hoyle1974/grapevine v0.0.0-20230621055508-d62babcaa3f8 // indirect
+	github.com/hoyle1974/grapevine/common v0.0.0-20230613054520-157f51bf0238 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
@@ -26,7 +28,7 @@ require (
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/pprof v0.0.0-20210407192527-94a9f03dee38 // indirect
-	github.com/hoyle1974/grapevine/proto v0.0.0-20230522131355-1ead3698b6f4 // indirect
+	github.com/hoyle1974/grapevine/proto v0.0.0-20230621053926-fd2241b6cb16 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect

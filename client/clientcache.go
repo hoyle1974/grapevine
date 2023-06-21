@@ -11,15 +11,15 @@ import (
 	"sync"
 	"time"
 
-	protoc "github.com/golang/protobuf/proto"
 	"github.com/hoyle1974/grapevine/common"
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
+	"google.golang.org/protobuf/proto"
 )
 
 type GrapevineClientCache interface {
 	GetClient(common.Address) GrapevineClient
-	POST(common.Address, string, protoc.Message, protoc.Message) error
+	POST(common.Address, string, proto.Message, proto.Message) error
 }
 
 type grapevineClientCache struct {
@@ -101,11 +101,11 @@ func (g *grapevineClientCache) GetClient(addr common.Address) GrapevineClient {
 }
 
 // Helper functions to make posts
-func (g *grapevineClientCache) POST(addr common.Address, url string, req protoc.Message, gresp protoc.Message) error {
+func (g *grapevineClientCache) POST(addr common.Address, url string, req proto.Message, gresp proto.Message) error {
 	// fmt.Printf("*** POST %s\n", fmt.Sprintf("https://%s%s", addr.GetURL(), url))
 	client := g.GetClient(addr).GetClient()
 
-	b, err := protoc.Marshal(req)
+	b, err := proto.Marshal(req)
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func (g *grapevineClientCache) POST(addr common.Address, url string, req protoc.
 	if gresp == nil {
 		return nil // We don't care about the response
 	}
-	err = protoc.Unmarshal(b, gresp)
+	err = proto.Unmarshal(b, gresp)
 	if err != nil {
 		return err
 	}

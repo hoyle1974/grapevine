@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/hoyle1974/grapevine/client"
 	"github.com/hoyle1974/grapevine/common"
 	pb "github.com/hoyle1974/grapevine/proto"
+	proto "google.golang.org/protobuf/proto"
 )
 
 type SharedDataManager interface {

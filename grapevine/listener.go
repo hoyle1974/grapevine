@@ -8,13 +8,13 @@ import (
 	"path"
 	"runtime"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
 	"github.com/hoyle1974/grapevine/client"
 	"github.com/hoyle1974/grapevine/common"
 	"github.com/hoyle1974/grapevine/gossip"
 	pb "github.com/hoyle1974/grapevine/proto"
 	"github.com/hoyle1974/grapevine/shareddata"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"

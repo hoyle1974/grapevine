@@ -1,4 +1,4 @@
-package client
+package shareddata
 
 import (
 	"io"
@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/golang/protobuf/proto"
+	"github.com/hoyle1974/grapevine/client"
 	"github.com/hoyle1974/grapevine/common"
 	pb "github.com/hoyle1974/grapevine/proto"
 )
@@ -21,14 +22,14 @@ type SharedDataManager interface {
 
 type sharedDataManager struct {
 	lock        sync.Mutex
-	ctx         CallCtx
+	ctx         common.CallCtx
 	myself      common.Myself
 	cb          ClientCallback
 	data        map[SharedDataId]SharedDataProxy
-	clientCache GrapevineClientCache
+	clientCache client.GrapevineClientCache
 }
 
-func NewSharedDataManager(ctx CallCtx, myself common.Myself, cb ClientCallback, clientCache GrapevineClientCache) SharedDataManager {
+func NewSharedDataManager(ctx common.CallCtx, myself common.Myself, cb ClientCallback, clientCache client.GrapevineClientCache) SharedDataManager {
 	return &sharedDataManager{
 		clientCache: clientCache,
 		myself:      myself,

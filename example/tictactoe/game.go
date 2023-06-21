@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hoyle1974/grapevine/client"
+	"github.com/hoyle1974/grapevine/common"
 )
 
 type GameInput interface {
@@ -16,7 +17,7 @@ type GameInput interface {
 var cb *Callback
 
 func initGame() *Callback {
-	ctx := client.NewCallCtxWithApp("tictactoe")
+	ctx := common.NewCallCtxWithApp("tictactoe")
 
 	cb = &Callback{searching: true, ctx: ctx.NewCtx("Callback")}
 
@@ -24,7 +25,7 @@ func initGame() *Callback {
 }
 
 func startGame(cb *Callback) client.Grapevine {
-	ctx := client.NewCallCtxWithApp("tictactoe")
+	ctx := common.NewCallCtxWithApp("tictactoe")
 
 	cb.grapevine = client.NewGrapevine(cb, ctx)
 	ip := GetOutboundIP(ctx)

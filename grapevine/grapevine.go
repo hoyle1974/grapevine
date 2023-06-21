@@ -1,4 +1,4 @@
-package client
+package grapevine
 
 import (
 	"context"
@@ -7,8 +7,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hoyle1974/grapevine/client"
 	"github.com/hoyle1974/grapevine/common"
+	"github.com/hoyle1974/grapevine/gossip"
 	"github.com/hoyle1974/grapevine/proto"
+	"github.com/hoyle1974/grapevine/shareddata"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -17,11 +20,11 @@ import (
 
 type Grapevine interface {
 	Start(ip net.IP) (int, error)
-	Serve(s SharedData) SharedData
-	JoinShare(s SharedData)
-	LeaveShare(s SharedData)
-	Invite(s SharedData, recipient common.Contact, as string) bool
-	Search(key string) SearchId
+	Serve(s shareddata.SharedData) shareddata.SharedData
+	JoinShare(s shareddata.SharedData)
+	LeaveShare(s shareddata.SharedData)
+	Invite(s shareddata.SharedData, recipient common.Contact, as string) bool
+	Search(key string) shareddata.SearchId
 	GetMe() common.Contact
 	GetMongers() []common.Address
 
@@ -31,16 +34,16 @@ type Grapevine interface {
 
 type grapevine struct {
 	lock              sync.Mutex
-	ctx               CallCtx
-	cb                ClientCallback
+	ctx               common.CallCtx
+	cb                shareddata.ClientCallback
 	listener          GrapevineListener
-	clientCache       GrapevineClientCache
+	clientCache       client.GrapevineClientCache
 	accountId         common.AccountId
-	gossip            Gossip
-	sharedDataManager SharedDataManager
+	gossip            gossip.Gossip
+	sharedDataManager shareddata.SharedDataManager
 }
 
-func NewGrapevine(cb ClientCallback, ctx CallCtx) Grapevine {
+func NewGrapevine(cb shareddata.ClientCallback, ctx common.CallCtx) Grapevine {
 	return &grapevine{cb: cb, ctx: ctx}
 }
 
@@ -61,10 +64,10 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 
 	// Start the server
 	ctx.Info().Msg("Starting listener . . ")
-	onSearchCB := func(searchId SearchId, query string) bool {
+	onSearchCB := func(searchId shareddata.SearchId, query string) bool {
 		return g.cb.OnSearch(searchId, query)
 	}
-	onSearchResultCB := func(searchId SearchId, response string, accountId common.AccountId, ip string, port int) {
+	onSearchResultCB := func(searchId shareddata.SearchId, response string, accountId common.AccountId, ip string, port int) {
 		g.cb.OnSearchResult(searchId, response, common.NewContact(accountId, net.ParseIP(ip), port))
 	}
 	g.listener = NewGrapevineListener(ctx, onSearchCB, onSearchResultCB)
@@ -75,13 +78,13 @@ func (g *grapevine) Start(ip net.IP) (int, error) {
 
 	// Create the client cache manager
 	ctx.Info().Msg("Creating client cache manager . . ")
-	g.clientCache = NewGrapevineClientCache()
+	g.clientCache = client.NewGrapevineClientCache()
 	g.listener.SetClientCache(g.clientCache)
 
-	g.sharedDataManager = NewSharedDataManager(ctx, g.listener, g.cb, g.clientCache)
+	g.sharedDataManager = shareddata.NewSharedDataManager(ctx, g.listener, g.cb, g.clientCache)
 	g.listener.SetSharedDataManager(g.sharedDataManager)
 
-	g.gossip = NewGossip(ctx, common.NewAddress(ip, port))
+	g.gossip = gossip.NewGossip(ctx, common.NewAddress(ip, port))
 	go g.gossip.GossipLoop(g.clientCache)
 	g.listener.SetGossip(g.gossip)
 
@@ -155,34 +158,34 @@ func (g *grapevine) Login(username string, password string, ip net.IP, port int)
 
 //------------------------------
 
-func (g *grapevine) Serve(s SharedData) SharedData {
+func (g *grapevine) Serve(s shareddata.SharedData) shareddata.SharedData {
 	// Make this shared data actually shareable
 	return g.sharedDataManager.Serve(s)
 }
 
-func (g *grapevine) JoinShare(s SharedData) {
+func (g *grapevine) JoinShare(s shareddata.SharedData) {
 	// Join a shared data
 	g.sharedDataManager.JoinShare(s)
 }
 
-func (g *grapevine) LeaveShare(s SharedData) {
+func (g *grapevine) LeaveShare(s shareddata.SharedData) {
 	// Leave a shared data
 	g.sharedDataManager.LeaveShare(s)
 }
 
-func (g *grapevine) Invite(s SharedData, recipient common.Contact, as string) bool {
+func (g *grapevine) Invite(s shareddata.SharedData, recipient common.Contact, as string) bool {
 	// Invite someone to our shared data
 	return g.sharedDataManager.Invite(s, recipient, as)
 }
 
 // Initiating a search
-func (g *grapevine) Search(query string) SearchId {
+func (g *grapevine) Search(query string) shareddata.SearchId {
 	log := g.ctx.NewCtx("Search")
 
 	// Search using the gossip protocol
 	log.Info().Msgf("Gossipping search for %v", query)
 
-	rumor := NewSearchRumor(NewRumor(
+	rumor := gossip.NewSearchRumor(gossip.NewRumor(
 		uuid.New(),
 		time.Now().Add(time.Minute),
 		g.accountId,
@@ -191,6 +194,6 @@ func (g *grapevine) Search(query string) SearchId {
 
 	g.gossip.AddToGossip(rumor)
 
-	return SearchId(rumor.rumorId.String())
+	return shareddata.SearchId(rumor.GetRumorId().String())
 
 }

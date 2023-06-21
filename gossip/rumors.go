@@ -1,4 +1,4 @@
-package client
+package gossip
 
 import (
 	"fmt"
@@ -98,11 +98,11 @@ type Rumors interface {
 
 type rumors struct {
 	lock   sync.Mutex
-	ctx    CallCtx
+	ctx    common.CallCtx
 	rumors []Rumor
 }
 
-func NewRumors(ctx CallCtx) Rumors {
+func NewRumors(ctx common.CallCtx) Rumors {
 	return &rumors{ctx: ctx}
 }
 

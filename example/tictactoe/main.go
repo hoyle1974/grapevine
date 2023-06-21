@@ -17,9 +17,10 @@ import (
 
 	"github.com/hoyle1974/grapevine/client"
 	"github.com/hoyle1974/grapevine/common"
+	"github.com/hoyle1974/grapevine/shareddata"
 )
 
-func GetOutboundIP(ctx client.CallCtx) net.IP {
+func GetOutboundIP(ctx common.CallCtx) net.IP {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
 		if err.Error() == "dial udp 8.8.8.8:80: connect: network is unreachable" {
@@ -37,9 +38,9 @@ func GetOutboundIP(ctx client.CallCtx) net.IP {
 
 type Callback struct {
 	lock       sync.Mutex
-	ctx        client.CallCtx
+	ctx        common.CallCtx
 	searching  bool
-	sharedData client.SharedData
+	sharedData shareddata.SharedData
 	grapevine  client.Grapevine
 	gp         Gameplay
 }

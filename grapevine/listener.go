@@ -1,4 +1,4 @@
-package client
+package grapevine
 
 import (
 	"fmt"
@@ -10,8 +10,11 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"github.com/google/uuid"
+	"github.com/hoyle1974/grapevine/client"
 	"github.com/hoyle1974/grapevine/common"
+	"github.com/hoyle1974/grapevine/gossip"
 	pb "github.com/hoyle1974/grapevine/proto"
+	"github.com/hoyle1974/grapevine/shareddata"
 
 	"github.com/quic-go/quic-go"
 	"github.com/quic-go/quic-go/http3"
@@ -22,22 +25,22 @@ type GrapevineListener interface {
 	GetMe() common.Contact
 	GetIp() net.IP
 	GetPort() int
-	SetGossip(gossip Gossip)
-	SetClientCache(clientCache GrapevineClientCache)
+	SetGossip(gossip gossip.Gossip)
+	SetClientCache(clientCache client.GrapevineClientCache)
 	SetAccountId(accountId common.AccountId)
-	SetSharedDataManager(sdm SharedDataManager)
+	SetSharedDataManager(sdm shareddata.SharedDataManager)
 }
 
 type grapevineListener struct {
-	ctx              CallCtx
+	ctx              common.CallCtx
 	accountId        common.AccountId
 	ip               net.IP
 	port             int
-	g                Gossip
-	clientCache      GrapevineClientCache
-	onSearchCb       func(searchId SearchId, query string) bool
-	onSearchResultCb func(searchId SearchId, response string, accountId common.AccountId, ip string, port int)
-	sdm              SharedDataManager
+	g                gossip.Gossip
+	clientCache      client.GrapevineClientCache
+	onSearchCb       func(searchId shareddata.SearchId, query string) bool
+	onSearchResultCb func(searchId shareddata.SearchId, response string, accountId common.AccountId, ip string, port int)
+	sdm              shareddata.SharedDataManager
 }
 
 func (g *grapevineListener) GetMe() common.Contact {
@@ -52,11 +55,11 @@ func (g *grapevineListener) GetPort() int {
 	return g.port
 }
 
-func (g *grapevineListener) SetGossip(gossip Gossip) {
+func (g *grapevineListener) SetGossip(gossip gossip.Gossip) {
 	g.g = gossip
 }
 
-func (g *grapevineListener) SetClientCache(clientCache GrapevineClientCache) {
+func (g *grapevineListener) SetClientCache(clientCache client.GrapevineClientCache) {
 	g.clientCache = clientCache
 }
 
@@ -64,13 +67,13 @@ func (g *grapevineListener) SetAccountId(accountId common.AccountId) {
 	g.accountId = accountId
 }
 
-func (g *grapevineListener) SetSharedDataManager(sdm SharedDataManager) {
+func (g *grapevineListener) SetSharedDataManager(sdm shareddata.SharedDataManager) {
 	g.sdm = sdm
 }
 
-func NewGrapevineListener(ctx CallCtx,
-	onSearchCb func(searchId SearchId, query string) bool,
-	onSearchResultCb func(searchId SearchId, response string, accountId common.AccountId, ip string, port int),
+func NewGrapevineListener(ctx common.CallCtx,
+	onSearchCb func(searchId shareddata.SearchId, query string) bool,
+	onSearchResultCb func(searchId shareddata.SearchId, response string, accountId common.AccountId, ip string, port int),
 ) GrapevineListener {
 	return &grapevineListener{
 		ctx:              ctx.NewCtx("server"),
@@ -102,7 +105,7 @@ func (g *grapevineListener) onSearchResult(writer http.ResponseWriter, req *http
 	// log.Debug().Msgf("%v", sr)
 
 	g.onSearchResultCb(
-		SearchId(sr.SearchId),
+		shareddata.SearchId(sr.SearchId),
 		sr.GetResponse(),
 		common.NewAccountId(sr.GetResponder().AccountId),
 		sr.GetResponder().ClientAddress.IpAddress,
@@ -135,14 +138,14 @@ func (g *grapevineListener) onGossip(writer http.ResponseWriter, req *http.Reque
 				continue
 			}
 
-			rumor := NewSearchRumor(NewRumor(
+			rumor := gossip.NewSearchRumor(gossip.NewRumor(
 				rumorId,
 				gg.EndOfLife.AsTime(),
 				common.NewAccountId(search.Requestor.AccountId),
 				common.NewAddress(net.ParseIP(search.Requestor.ClientAddress.IpAddress), int(search.Requestor.ClientAddress.Port)),
 			), search.Query)
 
-			if g.onSearchCb(SearchId(rumorId.String()), search.Query) {
+			if g.onSearchCb(shareddata.SearchId(rumorId.String()), search.Query) {
 				// We support this type of search, invite them.
 				log.Info().Msgf("onSearchCB result . . . ")
 

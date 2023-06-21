@@ -1,4 +1,4 @@
-package client
+package gossip
 
 import (
 	"math/rand"
@@ -22,12 +22,12 @@ type monger struct {
 
 type gossipMongers struct {
 	lock    sync.RWMutex
-	ctx     CallCtx
+	ctx     common.CallCtx
 	mongers []monger
 	self    common.Address
 }
 
-func NewGossipMongers(ctx CallCtx, self common.Address) GossipMongers {
+func NewGossipMongers(ctx common.CallCtx, self common.Address) GossipMongers {
 	return &gossipMongers{ctx: ctx, mongers: []monger{}, self: self}
 }
 

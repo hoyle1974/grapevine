@@ -1,31 +1,32 @@
-package client
+package gossip
 
 import (
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hoyle1974/grapevine/client"
 	"github.com/hoyle1974/grapevine/common"
 	"github.com/hoyle1974/grapevine/proto"
 )
 
 type Gossip interface {
 	AddToGossip(rumor Rumor)
-	GossipLoop(clientCache GrapevineClientCache)
+	GossipLoop(clientCache client.GrapevineClientCache)
 	AddServer(addr common.Address)
 	GetMongers() []common.Address
 }
 
 type gossip struct {
 	lock          sync.Mutex
-	ctx           CallCtx
+	ctx           common.CallCtx
 	self          common.Address
 	rumors        Rumors
 	mongers       GossipMongers
 	knownSearches map[string]bool
 }
 
-func NewGossip(ctx CallCtx, self common.Address) Gossip {
+func NewGossip(ctx common.CallCtx, self common.Address) Gossip {
 	return &gossip{
 		self:    self,
 		ctx:     ctx.NewCtx("gossip"),
@@ -52,7 +53,7 @@ func (g *gossip) getGossipRequest() *proto.GossipRequest {
 	return g.rumors.GetProtobuf()
 }
 
-func (g *gossip) GossipLoop(clientCache GrapevineClientCache) {
+func (g *gossip) GossipLoop(clientCache client.GrapevineClientCache) {
 	log := g.ctx.NewCtx("GossipLoop")
 
 	for {

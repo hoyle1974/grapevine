@@ -1,4 +1,4 @@
-package client
+package shareddata
 
 import (
 	"github.com/hoyle1974/grapevine/common"

@@ -134,17 +134,31 @@ func setTuiApp(gi GameInput) Gameplay {
 }
 
 func startTuiApp(grapevine grapevine.Grapevine) {
+	if grapevine == nil {
+		panic(fmt.Errorf("grapevine was nil"))
+	}
+
+	defer func() {
+		// fmt.Println("Stopping application")
+		//		if r := recover(); r != nil {
+		app.Stop()
+		// fmt.Println("application stopped")
+		//		}
+	}()
 
 	go func() {
 		for {
 			time.Sleep(time.Second / 30)
 
-			mongers.ClearChildren()
-			for _, addr := range grapevine.GetMongers() {
-				mongers.AddChild(tview.NewTreeNode(fmt.Sprintf("%v", addr)))
+			m := grapevine.GetMongers()
+			if m != nil {
+				mongers.ClearChildren()
+				for _, addr := range m {
+					mongers.AddChild(tview.NewTreeNode(fmt.Sprintf("%v", addr)))
+				}
+				app.Draw()
 			}
 
-			app.Draw()
 		}
 	}()
 

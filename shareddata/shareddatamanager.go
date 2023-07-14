@@ -17,7 +17,8 @@ type SharedDataManager interface {
 	JoinShare(s SharedData)
 	LeaveShare(s SharedData)
 	Invite(s SharedData, recipient common.Contact, as string) bool
-	OnSharedDataRequest(writer http.ResponseWriter, req *http.Request)
+	OnSharedDataRequestHttp(writer http.ResponseWriter, req *http.Request)
+	OnSharedDataRequest(uri string, body []byte) ([]byte, int)
 }
 
 type sharedDataManager struct {
@@ -39,9 +40,8 @@ func NewSharedDataManager(ctx common.CallCtx, myself common.Myself, cb ClientCal
 	}
 }
 
-func (sdm *sharedDataManager) OnSharedDataRequest(writer http.ResponseWriter, req *http.Request) {
-	log := sdm.ctx.NewCtx("OnSharedDataRequest")
-	//sdm.ctx.Info().Str("uri", req.RequestURI).Msg("request")
+func (sdm *sharedDataManager) OnSharedDataRequestHttp(writer http.ResponseWriter, req *http.Request) {
+	log := sdm.ctx.NewCtx("OnSharedDataRequestHttp")
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -50,12 +50,23 @@ func (sdm *sharedDataManager) OnSharedDataRequest(writer http.ResponseWriter, re
 		return
 	}
 
+	data, status := sdm.OnSharedDataRequest(req.RequestURI, body)
+
+	writer.WriteHeader(status)
+	if status == http.StatusOK {
+		writer.Write(data)
+	}
+}
+
+func (sdm *sharedDataManager) OnSharedDataRequest(uri string, body []byte) ([]byte, int) {
+	log := sdm.ctx.NewCtx("OnSharedDataRequest")
+
 	var resp proto.Message = nil
 
 	sdm.lock.Lock()
 	defer sdm.lock.Unlock()
 
-	switch req.RequestURI {
+	switch uri {
 	case "/shareddata/invite":
 		req := &pb.SharedDataInvite{}
 		proto.Unmarshal(body, req)
@@ -83,7 +94,7 @@ func (sdm *sharedDataManager) OnSharedDataRequest(writer http.ResponseWriter, re
 		sd := sdm.data[id]
 
 		for key, value := range req.Data {
-			sd.Create(key, value.Value, value.Owner, value.Visbility)
+			sd.Create(key, fromBytes(value.Value), value.Owner, value.Visbility)
 		}
 
 		for key, value := range req.Listeners {
@@ -96,7 +107,7 @@ func (sdm *sharedDataManager) OnSharedDataRequest(writer http.ResponseWriter, re
 
 		id := SharedDataId(req.SharedDataId)
 
-		sdm.data[id].GetOrigin().Create(req.Key, req.Value, req.Owner, req.Visibility)
+		sdm.data[id].GetOrigin().Create(req.Key, fromBytes(req.Value), req.Owner, req.Visibility)
 
 		resp = &pb.SharedDataCreateResponse{}
 	case "/shareddata/set":
@@ -104,15 +115,23 @@ func (sdm *sharedDataManager) OnSharedDataRequest(writer http.ResponseWriter, re
 		proto.Unmarshal(body, req)
 
 		id := SharedDataId(req.SharedDataId)
-		sdm.data[id].GetOrigin().Set(req.Key, req.Value)
+		sdm.data[id].GetOrigin().Set(req.Key, fromBytes(req.Value))
 
 		resp = &pb.SharedDataSetResponse{}
+	case "/shareddata/setmap":
+		req := &pb.SharedDataSetMap{}
+		proto.Unmarshal(body, req)
+
+		id := SharedDataId(req.SharedDataId)
+		sdm.data[id].GetOrigin().SetMap(req.Key, req.MapKey, fromBytes(req.Value))
+
+		resp = &pb.SharedDataSetMapResponse{}
 	case "/shareddata/append":
 		req := &pb.SharedDataAppend{}
 		proto.Unmarshal(body, req)
 
 		id := SharedDataId(req.SharedDataId)
-		sdm.data[id].GetOrigin().Append(req.Key, req.Value)
+		sdm.data[id].GetOrigin().Append(req.Key, fromBytes(req.Value))
 
 		resp = &pb.SharedDataAppendResponse{}
 	case "/shareddata/changeowner":
@@ -124,22 +143,19 @@ func (sdm *sharedDataManager) OnSharedDataRequest(writer http.ResponseWriter, re
 
 		resp = &pb.SharedDataChangeOwnerResponse{}
 	default:
-		log.Error().Msgf("Unsupported shared data command: %s", req.RequestURI)
+		log.Error().Msgf("Unsupported shared data command: %s", uri)
 	}
 
 	if resp != nil {
-		body, err = proto.Marshal(resp)
+		body, err := proto.Marshal(resp)
 		if err != nil {
 			log.Error().Err(err).Msg("error writing response")
-			writer.WriteHeader(http.StatusServiceUnavailable)
-			return
+			return nil, http.StatusServiceUnavailable
 		}
-		writer.WriteHeader(http.StatusOK)
-		writer.Write(body)
-	} else {
-		writer.WriteHeader(http.StatusServiceUnavailable)
+		return body, http.StatusOK
 	}
 
+	return nil, http.StatusServiceUnavailable
 }
 
 func (sdm *sharedDataManager) GetMe() common.Contact {

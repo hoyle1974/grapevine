@@ -19,7 +19,7 @@ func NewCallCtx(log zerolog.Logger) CallCtx {
 }
 
 func NewCallCtxWithApp(app string) CallCtx {
-	log := log.With().Str("app", "tictactoe").Logger()
+	log := log.With().Str("app", app).Logger()
 	return NewCallCtx(log)
 }
 

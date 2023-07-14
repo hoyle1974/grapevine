@@ -1,6 +1,8 @@
 package shareddata
 
 import (
+	"reflect"
+
 	"github.com/hoyle1974/grapevine/common"
 )
 
@@ -28,8 +30,11 @@ type SharedData interface {
 	GetCreator() common.Contact
 	GetId() SharedDataId
 	Create(key string, value interface{}, owner string, visibility string)
+	CreateArray(key string, value []interface{}, owner string, visibility string)
+	CreateMap(key string, value interface{}, owner string, visibility string)
 	Get(key string) interface{}
 	Set(key string, value interface{})
+	SetMap(key string, mapKey string, value interface{})
 	Append(key string, value interface{})
 	GetOwner(key string) string
 	SetMe(string)
@@ -42,6 +47,7 @@ type SharedData interface {
 
 type data struct {
 	value      interface{}
+	avalue     []interface{}
 	owner      string
 	visibility string
 }
@@ -75,8 +81,29 @@ func (s *sharedData) GetId() SharedDataId {
 }
 
 func (s *sharedData) Create(key string, value interface{}, owner string, visibility string) {
-	// fmt.Printf("%v) CREATE %v:%v  (%v:%v)\n", s.id, key, value, owner, visibility)
-	s.data[key] = data{value, owner, visibility}
+	s.data[key] = data{value, nil, owner, visibility}
+}
+
+func (s *sharedData) CreateArray(key string, value []interface{}, owner string, visibility string) {
+	s.data[key] = data{nil, value, owner, visibility}
+}
+
+func (s *sharedData) CreateMap(key string, value interface{}, owner string, visibility string) {
+
+	temp := make(map[string]interface{})
+
+	val := reflect.ValueOf(value)
+
+	if val.Kind() != reflect.Map {
+		panic("not a map!")
+	}
+
+	for _, e := range val.MapKeys() {
+		v := val.MapIndex(e)
+		temp[e.String()] = v
+	}
+
+	s.data[key] = data{temp, nil, owner, visibility}
 }
 
 func (s *sharedData) Set(key string, value interface{}) {
@@ -86,12 +113,33 @@ func (s *sharedData) Set(key string, value interface{}) {
 		return
 	}
 	// if s.IsMe(d.owner) {
-	s.data[key] = data{value, d.owner, d.visibility}
+	s.data[key] = data{value, nil, d.owner, d.visibility}
+	// }
+}
+
+func (s *sharedData) SetMap(key string, mapKey string, value interface{}) {
+	// fmt.Printf("Set %v:%v \n", key, value)
+	d, ok := s.data[key]
+	if !ok {
+		return
+	}
+	// if s.IsMe(d.owner) {
+	dd, ok := d.value.(map[string]interface{})
+	if !ok {
+		panic("Unexpected type")
+	}
+	dd[mapKey] = value
+
+	s.data[key] = data{dd, nil, d.owner, d.visibility}
 	// }
 }
 
 func (s *sharedData) Get(key string) interface{} {
-	return s.data[key].value
+	t := s.data[key]
+	if t.value == nil {
+		return t.avalue
+	}
+	return t.value
 }
 
 func (s *sharedData) Append(key string, value interface{}) {
@@ -101,9 +149,8 @@ func (s *sharedData) Append(key string, value interface{}) {
 	if !ok {
 		return
 	}
-	v := d.value.([]interface{})
-	v = append(v, value)
-	s.data[key] = data{v, d.owner, d.visibility}
+	d.avalue = append(d.avalue, value)
+	s.data[key] = data{nil, d.avalue, d.owner, d.visibility}
 }
 
 func (s *sharedData) GetOwner(key string) string {

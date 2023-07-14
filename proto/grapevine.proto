@@ -92,7 +92,7 @@ message SharedDataCreate {
   string sharedDataId = 1;
   UserContact originator = 2;
   string key = 3;
-  string value = 4;
+  bytes value = 4;
   string owner = 5;
   string visibility = 6;
 }
@@ -100,14 +100,51 @@ message SharedDataCreate {
 message SharedDataCreateResponse {
 }
 
+message SharedDataCreateArray {
+  string sharedDataId = 1;
+  UserContact originator = 2;
+  string key = 3;
+  bytes value = 4;
+  string owner = 5;
+  string visibility = 6;
+}
+
+message SharedDataCreateArrayResponse {
+}
+
+message SharedDataCreateMap {
+  string sharedDataId = 1;
+  UserContact originator = 2;
+  string key = 3;
+  bytes value = 4;
+  string owner = 5;
+  string visibility = 6;
+}
+
+message SharedDataCreateMapResponse {
+}
+
 message SharedDataSet {
   string sharedDataId = 1;
   UserContact originator = 2;
   string key = 3;
-  string value = 4;
+  bytes value = 4;
 }
 
 message SharedDataSetResponse {
+  
+}
+
+
+message SharedDataSetMap {
+  string sharedDataId = 1;
+  UserContact originator = 2;
+  string key = 3;
+  string mapKey = 4;
+  bytes value = 5;
+}
+
+message SharedDataSetMapResponse {
   
 }
 
@@ -115,7 +152,7 @@ message SharedDataAppend {
   string sharedDataId = 1;
   UserContact originator = 2;
   string key = 3;
-  string value = 4;
+  bytes value = 4;
 }
 
 message SharedDataAppendResponse {
@@ -133,7 +170,7 @@ message SharedDataChangeOwnerResponse {
 }
 
 message SharedDataData {
-  string value = 1;
+  bytes value = 1;
   string owner = 2;
   string visbility = 3; 
 }

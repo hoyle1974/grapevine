@@ -86,7 +86,7 @@ func (g *grapevineListener) onSharedData(writer http.ResponseWriter, req *http.R
 	// log := g.ctx.NewCtx("onSharedData")
 	// log.Info().Msg("\tReceive")
 
-	g.sdm.OnSharedDataRequest(writer, req)
+	g.sdm.OnSharedDataRequestHttp(writer, req)
 }
 
 func (g *grapevineListener) onSearchResult(writer http.ResponseWriter, req *http.Request) {
@@ -248,6 +248,7 @@ func (g *grapevineListener) Listen(ip net.IP) (int, error) {
 	mux.HandleFunc("/shareddata/create", g.onSharedData)
 	mux.HandleFunc("/shareddata/changeowner", g.onSharedData)
 	mux.HandleFunc("/shareddata/set", g.onSharedData)
+	mux.HandleFunc("/shareddata/setmap", g.onSharedData)
 	mux.HandleFunc("/shareddata/append", g.onSharedData)
 	mux.HandleFunc("/shareddata/sendstate", g.onSharedData)
 	// mux.HandleFunc("/data/invite", g.gossip)
